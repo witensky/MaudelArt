@@ -7,7 +7,7 @@ import Dashboard from './components/Admin/Dashboard';
 import Profile from './components/Profile';
 import Artists from './components/Artists';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
+import HeroNew from './components/HeroNew';
 import Gallery from './components/Gallery';
 import Biography from './components/Biography';
 import Inspiration from './components/Inspiration';
@@ -114,7 +114,7 @@ const App: React.FC = () => {
       case 'home':
         return (
           <motion.div key="home" variants={pageVariants} initial="initial" animate="enter" exit="exit">
-            <Hero setView={handleLinkClick} />
+            <HeroNew setView={handleLinkClick} />
             <section className="py-32 bg-white flex items-center justify-center text-center px-6">
               <div className="max-w-4xl">
                 <motion.div
@@ -201,7 +201,7 @@ const App: React.FC = () => {
       case 'profile':
         return <motion.div key="profile" variants={pageVariants} initial="initial" animate="enter" exit="exit"><Profile /></motion.div>;
       default:
-        return <Hero setView={handleLinkClick} />;
+        return <HeroNew setView={handleLinkClick} />;
     }
   };
 

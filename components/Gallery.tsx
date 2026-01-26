@@ -194,68 +194,90 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
   }
 
   return (
-    <section id="galerie" className="pt-40 pb-32 bg-[#fcfcf9] px-6 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col items-center mb-24">
+    <section id="galerie" className="pt-24 sm:pt-32 lg:pt-40 pb-20 sm:pb-32 bg-[#fcfcf9] px-4 sm:px-6 lg:px-8 min-h-screen">
+      <div className="w-full max-w-7xl mx-auto">
+        {/* Header Section - Optimized for mobile */}
+        <div className="flex flex-col items-center mb-8 sm:mb-12 lg:mb-24">
           <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-[#d4af37] uppercase tracking-[0.4em] text-xs font-bold mb-4 block text-center"
+            className="text-[#d4af37] uppercase tracking-[0.2em] text-[10px] sm:text-xs font-bold mb-2 sm:mb-4 block text-center"
           >
             Catalogue d'Exception
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl serif text-emerald-950 mb-12 text-center"
+            className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl serif text-emerald-950 mb-6 sm:mb-10 text-center leading-tight"
           >
             La Galerie
           </motion.h2>
 
+          {/* Search Bar - Full width on mobile */}
           <div className="w-full max-w-2xl relative group">
-            <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-emerald-950/20 group-focus-within:text-[#d4af37] transition-colors">
-              <Search size={20} />
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-emerald-950/30 group-focus-within:text-[#d4af37] transition-colors">
+              <Search size={16} />
             </div>
             <input
               type="text"
-              placeholder="Rechercher une œuvre, un auteur, une technique..."
+              placeholder="Rechercher une œuvre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-emerald-950/10 py-5 pl-16 pr-6 rounded-2xl shadow-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/10 transition-all text-sm placeholder:text-emerald-950/20 text-emerald-950"
+              className="w-full bg-white border border-emerald-950/10 py-3 sm:py-4 pl-11 pr-4 rounded-xl shadow-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/10 transition-all text-sm sm:text-base placeholder:text-emerald-950/40 text-emerald-950 h-12 sm:h-[52px]"
             />
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-10 mb-16 border-b border-emerald-950/5 pb-10">
-          <div className="flex gap-2 p-1 bg-emerald-950/5 rounded-xl">
-            {[
-              { id: 'all', label: 'Toutes les Œuvres', icon: Grid },
-              { id: 'collections', label: 'Collections', icon: Layers },
-              { id: 'authors', label: 'Artistes', icon: Users },
-            ].map((view) => (
-              <button
-                key={view.id}
-                onClick={() => setViewMode(view.id as GalleryView)}
-                className={`flex items-center gap-3 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === view.id ? 'bg-white text-emerald-950 shadow-sm' : 'text-emerald-950/40 hover:text-emerald-950'}`}
-              >
-                <view.icon size={14} />
-                {view.label}
-              </button>
-            ))}
+        {/* View Mode & Category Tabs - Redesigned for mobile */}
+        <div className="mb-8 sm:mb-12 lg:mb-16">
+          {/* View Mode Tabs - Horizontal scroll on mobile */}
+          <div className="mb-6 overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 pb-2">
+            <div className="flex gap-2 p-2 bg-emerald-950/5 rounded-lg sm:rounded-xl w-max sm:w-full h-12">
+              {[
+                { id: 'all', label: 'Toutes les œuvres', icon: Grid },
+                { id: 'collections', label: 'Collections', icon: Layers },
+                { id: 'authors', label: 'Artistes', icon: Users },
+              ].map((view) => (
+                <button
+                  key={view.id}
+                  onClick={() => setViewMode(view.id as GalleryView)}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wide transition-all whitespace-nowrap flex-shrink-0 ${
+                    viewMode === view.id 
+                      ? 'bg-white text-emerald-950 shadow-sm' 
+                      : 'text-emerald-950/40 hover:text-emerald-950'
+                  }`}
+                >
+                  <view.icon size={14} className="flex-shrink-0" />
+                  <span className="hidden sm:inline">{view.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-8">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`relative text-[9px] uppercase tracking-[0.2em] transition-all font-black ${filter === cat ? 'text-[#d4af37]' : 'text-emerald-950/30 hover:text-emerald-950'
+          {/* Category Filter Tabs - Scrollable container */}
+          <div className="category-tabs-wrapper overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 pb-2">
+            <div className="flex gap-0 pb-3 min-w-min sm:min-w-full sm:justify-center relative">
+              {categories.map((cat, idx) => (
+                <button
+                  key={`${cat}-${idx}`}
+                  onClick={() => setFilter(cat)}
+                  className={`relative text-xs sm:text-sm uppercase tracking-[0.1em] transition-colors font-bold whitespace-nowrap py-2 px-3 sm:px-4 flex-shrink-0 h-12 flex items-center justify-center ${
+                    filter === cat 
+                      ? 'text-[#d4af37]' 
+                      : 'text-emerald-950/40 hover:text-emerald-950/70'
                   }`}
-              >
-                {cat}
-                {filter === cat && <motion.div layoutId="catUnder" className="absolute -bottom-2 left-0 right-0 h-0.5 bg-[#d4af37]" />}
-              </button>
-            ))}
+                >
+                  {cat}
+                  {filter === cat && (
+                    <motion.div 
+                      layoutId="catUnder" 
+                      className="absolute bottom-0 left-0 right-0 h-1 bg-[#d4af37] rounded-t" 
+                      transition={{ type: 'spring', stiffness: 380, damping: 40 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -264,7 +286,7 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             <motion.div
               key="all-grid"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16"
+              className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10 md:gap-12 lg:gap-16"
             >
               {filteredArtworks.map((art, idx) => <ArtworkCard key={art.id} art={art} index={idx} />)}
             </motion.div>
@@ -274,18 +296,18 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             <motion.div
               key="collections-grid"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="space-y-32"
+              className="space-y-16 sm:space-y-24 md:space-y-32"
             >
               {collections.map((col) => {
                 const colArtworks = filteredArtworks.filter(a => a.collectionId === col.id);
                 if (colArtworks.length === 0) return null;
                 return (
-                  <div key={col.id} className="space-y-12">
-                    <div className="border-l-4 border-[#d4af37] pl-8">
-                      <h3 className="text-4xl serif text-emerald-950 mb-4">{col.name}</h3>
-                      <p className="text-emerald-950/50 text-sm leading-relaxed max-w-2xl">{col.description}</p>
+                  <div key={col.id} className="space-y-8 sm:space-y-10 md:space-y-12">
+                    <div className="border-l-4 border-[#d4af37] pl-4 sm:pl-6 md:pl-8">
+                      <h3 className="text-2xl sm:text-3xl md:text-4xl serif text-emerald-950 mb-2 sm:mb-3 md:mb-4">{col.name}</h3>
+                      <p className="text-emerald-950/50 text-xs sm:text-sm leading-relaxed max-w-2xl">{col.description}</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
                       {colArtworks.map((art) => (
                         <ArtworkCard
                           key={art.id}
@@ -304,23 +326,23 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             <motion.div
               key="authors-grid"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="space-y-40"
+              className="space-y-20 sm:space-y-32 md:space-y-40"
             >
               {authors.map((author) => {
                 const authorArtworks = filteredArtworks.filter(a => a.authorId === author.id);
                 if (authorArtworks.length === 0) return null;
                 return (
-                  <div key={author.id} className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                  <div key={author.id} className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
                     <div className="lg:col-span-3">
-                      <div className="sticky top-40 bg-white p-8 border border-emerald-950/10 shadow-sm rounded-lg">
-                        <div className="w-24 h-24 overflow-hidden border border-emerald-950/10 mb-6 mx-auto lg:mx-0">
+                      <div className="sticky top-20 sm:top-24 bg-white p-6 sm:p-8 border border-emerald-950/10 shadow-sm rounded-xl">
+                        <div className="w-20 sm:w-24 h-20 sm:h-24 overflow-hidden border border-emerald-950/10 mb-4 sm:mb-6 mx-auto lg:mx-0">
                           <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
                         </div>
-                        <h3 className="text-2xl serif text-emerald-950 mb-4 text-center lg:text-left">{author.name}</h3>
-                        <p className="text-xs text-emerald-950/60 leading-relaxed italic text-center lg:text-left">{author.bio}</p>
+                        <h3 className="text-lg sm:text-xl md:text-2xl serif text-emerald-950 mb-2 sm:mb-3 md:mb-4 text-center lg:text-left">{author.name}</h3>
+                        <p className="text-[11px] sm:text-xs text-emerald-950/60 leading-relaxed italic text-center lg:text-left">{author.bio}</p>
                       </div>
                     </div>
-                    <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-9 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                       {authorArtworks.map((art) => (
                         <ArtworkCard
                           key={art.id}
