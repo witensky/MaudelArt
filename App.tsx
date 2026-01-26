@@ -17,6 +17,8 @@ import Checkout from './components/Checkout';
 import ArtPreviewCarousel from './components/ArtPreviewCarousel';
 import { Instagram, Facebook, Twitter, Mail, ArrowUpRight } from 'lucide-react';
 import { Artwork } from './types';
+import './index.css'
+
 
 export type View = 'home' | 'gallery' | 'bio' | 'inspiration' | 'contact' | 'blog' | 'auth' | 'checkout' | 'admin' | 'profile' | 'artists';
 
