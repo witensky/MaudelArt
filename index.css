@@ -1,0 +1,6 @@
+/* Base styles */
+@layer base {
+  body {
+    @apply bg-[#041a14] text-white;
+  }
+}
