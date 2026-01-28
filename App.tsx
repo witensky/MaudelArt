@@ -7,13 +7,14 @@ import Dashboard from './components/Admin/Dashboard';
 import Profile from './components/Profile';
 import Artists from './components/Artists';
 import Navbar from './components/Navbar';
-import HeroNew from './components/HeroNew';
+import HeroNew from './components/Hero';
 import Gallery from './components/Gallery';
 import Biography from './components/Biography';
 import Inspiration from './components/Inspiration';
 import Contact from './components/Contact';
 import Auth from './components/Auth';
 import Checkout from './components/Checkout';
+import { Blog } from './components/Blog';
 import ArtPreviewCarousel from './components/ArtPreviewCarousel';
 import { Instagram, Facebook, Twitter, Mail, ArrowUpRight } from 'lucide-react';
 import { Artwork } from './types';
@@ -176,20 +177,7 @@ const App: React.FC = () => {
           </motion.div>
         );
       case 'blog':
-        return (
-          <motion.div key="blog" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="pt-40 pb-32 px-6 min-h-screen bg-[#041a14] flex items-center justify-center text-center">
-            <div className="max-w-3xl">
-              <h2 className="text-5xl md:text-7xl serif text-white mb-8">Journal Artistique</h2>
-              <p className="text-white/60 text-xl leading-relaxed italic">
-                Réflexions sur la peinture, le processus créatif et les inspirations à venir. <br />
-                <span className="text-emerald-400 not-italic font-bold text-sm uppercase tracking-widest mt-6 block">Bientôt disponible</span>
-              </p>
-              <button onClick={() => handleLinkClick('home')} className="mt-12 text-[#d4af37] uppercase tracking-widest text-xs font-bold hover:text-white transition-colors">
-                Retour à l'accueil
-              </button>
-            </div>
-          </motion.div>
-        );
+        return <motion.div key="blog" variants={pageVariants} initial="initial" animate="enter" exit="exit"><Blog /></motion.div>;
       case 'admin':
         return (
           <motion.div key="admin" variants={pageVariants} initial="initial" animate="enter" exit="exit">

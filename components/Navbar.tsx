@@ -42,10 +42,9 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
   };
 
   return (
-    <nav className={`fixed w-full z-[100] transition-all duration-300 ${
-      isScrolled ? 'bg-white shadow-md' : 'bg-white'
-    }`} style={{ height: '60px', minHeight: '60px' }}>
-      <div className="w-full h-full px-3 sm:px-6 lg:px-8 flex justify-between items-center max-w-full">
+    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white'
+      } h-14 md:h-[60px]`}>
+      <div className="w-full h-full px-4 sm:px-6 lg:px-8 flex justify-between items-center max-w-full">
         {/* Logo - Optimized for mobile */}
         <button
           onClick={() => handleNavClick('home')}
@@ -137,8 +136,8 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-1 max-w-full overflow-y-auto"
-          style={{ maxHeight: 'calc(100vh - 60px)' }}
+          className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-1 max-w-full overflow-y-auto absolute w-full shadow-xl"
+          style={{ maxHeight: 'calc(100vh - 56px)' }}
         >
           <div className="flex flex-col gap-0">
             {navLinks.map((link) => (
@@ -150,7 +149,7 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
                 {link.name}
               </button>
             ))}
-            
+
             {user && (
               <>
                 <hr className="my-2" />

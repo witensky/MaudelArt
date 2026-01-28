@@ -159,21 +159,32 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
             <div className="h-px bg-white/10 flex-1" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-3 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/10 transition-all">
-              <Chrome size={16} /> Google
-            </button>
-            <button className="flex items-center justify-center gap-3 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/10 transition-all">
-              <Github size={16} /> Github
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: `${window.location.origin}/`
+                  }
+                });
+                if (error) throw error;
+              } catch (err: any) {
+                setError(err.message);
+              }
+            }}
+            className="w-full flex items-center justify-center gap-3 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <Chrome size={16} /> Continuer avec Google
+          </button>
         </div>
 
         <p className="mt-8 text-center text-[10px] text-white/20 uppercase tracking-widest font-black">
           En continuant, vous acceptez nos <a href="#" className="text-emerald-500 hover:underline">conditions d'utilisation</a>.
         </p>
       </div>
-    </div>
+    </div >
   );
 };
 

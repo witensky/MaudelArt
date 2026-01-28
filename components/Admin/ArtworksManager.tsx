@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const ArtworksManager = () => {
     const [artworks, setArtworks] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
+    const [authors, setAuthors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -21,7 +22,7 @@ export const ArtworksManager = () => {
         price: '',
         category_id: '',
         image_url: '',
-        author_id: 'mme' // Default to main author for now
+        author_id: ''
     });
 
     useEffect(() => {
@@ -35,12 +36,12 @@ export const ArtworksManager = () => {
             .select('*, categories(name)')
             .order('created_at', { ascending: false });
 
-        const { data: cats } = await supabase
-            .from('categories')
-            .select('*');
+        const { data: cats } = await supabase.from('categories').select('*');
+        const { data: auths } = await supabase.from('authors').select('*');
 
         if (arts) setArtworks(arts);
         if (cats) setCategories(cats);
+        if (auths) setAuthors(auths);
         setLoading(false);
     };
 
@@ -116,7 +117,7 @@ export const ArtworksManager = () => {
             price: '',
             category_id: '',
             image_url: '',
-            author_id: 'mme'
+            author_id: authors.length > 0 ? authors[0].id : ''
         });
     };
 
@@ -131,7 +132,7 @@ export const ArtworksManager = () => {
             price: art.price || '',
             category_id: art.category_id || '',
             image_url: art.image_url || '',
-            author_id: art.author_id || 'mme'
+            author_id: art.author_id || (authors.length > 0 ? authors[0].id : '')
         });
         setIsModalOpen(true);
     };
@@ -300,6 +301,18 @@ export const ArtworksManager = () => {
                                             className="w-full bg-white border border-emerald-950/10 rounded-2xl p-4 text-emerald-950 font-medium focus:border-emerald-500 outline-none transition-all"
                                             placeholder="Ex: 80x100 cm"
                                         />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase tracking-widest text-emerald-900/40 font-black">Artiste</label>
+                                        <select
+                                            value={formData.author_id}
+                                            onChange={e => setFormData({ ...formData, author_id: e.target.value })}
+                                            className="w-full bg-white border border-emerald-950/10 rounded-2xl p-4 text-emerald-950 font-bold focus:border-emerald-500 outline-none transition-all appearance-none"
+                                            required
+                                        >
+                                            <option value="">Sélectionner un artiste</option>
+                                            {authors.map(auth => <option key={auth.id} value={auth.id}>{auth.name}</option>)}
+                                        </select>
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-[10px] uppercase tracking-widest text-emerald-900/40 font-black">Année de Création</label>

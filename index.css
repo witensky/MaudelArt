@@ -9,7 +9,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -22,7 +23,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   padding: 0;
 }
@@ -61,7 +67,9 @@ button:disabled {
 }
 
 /* Form elements */
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
   border: none;
@@ -75,6 +83,17 @@ input, textarea, select {
   margin: 0 auto;
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 /* ========================================
    MOBILE-FIRST CATEGORY TABS
    ======================================== */
@@ -85,7 +104,7 @@ input, textarea, select {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  
+
   /* Scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: #d4af37 transparent;
@@ -110,7 +129,7 @@ input, textarea, select {
 }
 
 /* Category tabs container */
-.category-tabs-wrapper > div {
+.category-tabs-wrapper>div {
   display: flex;
   gap: 0;
   position: relative;
@@ -143,17 +162,9 @@ input, textarea, select {
    SEARCH BAR - Mobile Optimized
    ======================================== */
 
-input[type="text"][placeholder*="Rechercher"],
-input[type="text"][placeholder*="Search"] {
-  /* Ensure readable input on mobile */
-  font-size: 16px; /* Prevents iOS auto-zoom */
-  letter-spacing: 0;
-  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
-  height: 3rem;
-}
-
 input[placeholder]::placeholder {
-  color: rgba(5, 110, 67, 0.4); /* Improved contrast */
+  color: rgba(5, 110, 67, 0.4);
+  /* Improved contrast */
   font-size: 14px;
 }
 
@@ -162,7 +173,7 @@ input[placeholder]::placeholder {
    ======================================== */
 
 /* Button groups in view mode */
-div[class*="gap-2"] > button {
+div[class*="gap-2"]>button {
   min-height: 3rem;
   display: flex;
   align-items: center;
@@ -208,18 +219,26 @@ div[class*="gap-2"] > button {
    ======================================== */
 
 @media (max-width: 640px) {
+
   /* Ensure minimum text size for readability */
   body {
     font-size: 14px;
     line-height: 1.5;
   }
 
-  p, span, label {
+  p,
+  span,
+  label {
     font-size: 14px;
   }
 
   /* Reduce excessive letter-spacing on mobile */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     letter-spacing: 0.05em !important;
   }
 

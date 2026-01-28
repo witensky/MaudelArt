@@ -11,7 +11,7 @@ interface HeroProps {
 }
 
 const StatItem = ({ value, label, index }: { value: string; label: string; index: number }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.5 + index * 0.15, duration: 0.6 }}
@@ -73,7 +73,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#041a14] pt-20 px-4 sm:px-6 lg:px-20"
+      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#041a14] pt-16 sm:pt-20 px-4 sm:px-6 lg:px-20"
     >
       {/* Background Ambience - Simplified for mobile */}
       <motion.div
@@ -126,11 +126,11 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
                 <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-600 leading-[1.1] tracking-tight relative">
                   L'Art Rare
                 </h1>
-                
+
                 {/* Animated Arrow - Hidden on small screens */}
                 <motion.div
-                  animate={{ 
-                    x: [0, 8, 0], 
+                  animate={{
+                    x: [0, 8, 0],
                     y: [0, -8, 0],
                     rotate: [0, 15, 0]
                   }}
@@ -143,7 +143,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             </div>
 
             {/* Description - Fade in */}
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
@@ -153,7 +153,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             </motion.p>
 
             {/* Buttons with Stagger */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
@@ -183,7 +183,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
                 onClick={() => setView('inspiration')}
                 className="group px-6 xs:px-10 py-4 xs:py-5 bg-white/5 backdrop-blur-sm border border-white/10 text-white/80 rounded-xl font-black tracking-widest text-xs uppercase hover:bg-white/10 transition-all flex items-center justify-center gap-3 w-full xs:w-auto"
               >
-                <motion.div 
+                <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                   className="w-7 xs:w-8 h-7 xs:h-8 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 flex items-center justify-center group-hover:from-emerald-500/40 group-hover:to-cyan-500/40 transition-colors flex-shrink-0"
@@ -196,7 +196,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           </motion.div>
 
           {/* Social Icons */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
@@ -208,7 +208,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
               { Icon: Twitter, label: 'Twitter' },
               { Icon: MessageCircle, label: 'Message' }
             ].map((social, i) => (
-              <motion.a 
+              <motion.a
                 key={i}
                 href="#"
                 whileHover={{ scale: 1.2, rotate: 5 }}
@@ -233,18 +233,18 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             className="w-full h-full relative art-reveal-container"
           >
             {/* Ambient Glow Background - Enhanced */}
-            <motion.div 
-              animate={{ 
+            <motion.div
+              animate={{
                 rotate: 360,
                 scale: [1, 1.1, 1]
               }}
-              transition={{ 
+              transition={{
                 rotate: { duration: 20, repeat: Infinity, ease: "linear" },
                 scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
               }}
               className="absolute inset-0 bg-gradient-to-br from-emerald-600/25 via-cyan-500/10 to-emerald-700/20 blur-[80px] sm:blur-[120px] rounded-full scale-150 -z-10"
             />
-            
+
             {/* Main Art Reveal */}
             <ArtReveal fallbackImage={paintingImageUrl} />
 
@@ -255,7 +255,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             </div>
 
             {/* Caption Overlay - Repositioned for mobile */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 2, duration: 0.8 }}

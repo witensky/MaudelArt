@@ -24,11 +24,17 @@ type Tab = 'dashboard' | 'paintings' | 'gallery' | 'bio' | 'messages' | 'setting
 
 const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
     const [stats, setStats] = useState({ artworks: 0, messages: 0, collections: 0 });
 
     useEffect(() => {
         fetchStats();
+        const handleResize = () => {
+            if (window.innerWidth < 768) setIsSidebarOpen(false);
+            else setIsSidebarOpen(true);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const fetchStats = async () => {
@@ -62,11 +68,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
     return (
         <div className="flex min-h-screen bg-[#f8f9fa]">
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Sidebar */}
             <motion.aside
                 initial={false}
                 animate={{ width: isSidebarOpen ? '280px' : '0px', opacity: isSidebarOpen ? 1 : 0 }}
-                className="fixed md:relative z-50 h-screen bg-[#041a14] text-white shadow-2xl flex flex-col overflow-hidden"
+                className="fixed md:relative z-50 h-[100dvh] md:h-screen bg-[#041a14] text-white shadow-2xl flex flex-col overflow-hidden whitespace-nowrap"
             >
                 <div className="p-8 border-b border-white/5 flex flex-col gap-1 min-w-[280px]">
                     <h1 className="text-2xl font-black tracking-tighter text-white">

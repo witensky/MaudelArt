@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       letterSpacing: {
         '04em': '0.4em',
         '03em': '0.3em',
