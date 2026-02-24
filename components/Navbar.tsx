@@ -33,6 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
     { name: 'Galerie', id: 'gallery' },
     { name: 'Artistes', id: 'artists' },
     { name: 'À propos', id: 'bio' },
+    { name: 'Contact', id: 'contact' },
   ];
 
   const handleNavClick = (id: View) => {
@@ -54,15 +55,25 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
         </button>
 
         {/* Desktop Menu */}
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6 lg:gap-8">
           {navLinks.map((link) => (
-            <button
+            <motion.button
               key={link.id}
               onClick={() => handleNavClick(link.id)}
-              className="text-gray-700 text-xs lg:text-sm font-medium hover:text-gray-900 transition-colors whitespace-nowrap py-2"
+              className={`text-xs lg:text-sm font-medium transition-colors whitespace-nowrap py-2 relative ${currentView === link.id ? 'text-maudel-dark font-bold' : 'text-gray-600 hover:text-maudel-dark'}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {link.name}
-            </button>
+              {currentView === link.id && (
+                <motion.div
+                  layoutId="underline"
+                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-gold rounded-full"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+            </motion.button>
           ))}
         </div>
 

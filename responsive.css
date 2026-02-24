@@ -1,15 +1,13 @@
 /* ========================================
    RESPONSIVE DESIGN - MAUDELART PREMIUM
-   Mobile-First Architecture
+   Safe, scoped — no global Tailwind conflicts
    ======================================== */
 
-/* Global Reset & Base Styles */
-* {
-  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
-  box-sizing: border-box;
-}
-
-html, body {
+/* ========================================
+   BASE RESETS (safe, non-conflicting)
+   ======================================== */
+html,
+body {
   width: 100%;
   overflow-x: hidden;
   margin: 0;
@@ -20,451 +18,10 @@ body {
   position: relative;
 }
 
-/* ========================================
-   MOBILE FIRST - Extra Small (< 480px)
-   ======================================== */
-@media (max-width: 479px) {
-  html {
-    font-size: 13px;
-  }
-
-  body {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.2;
-    margin: 0;
-  }
-
-  h1 {
-    font-size: 1.75rem !important;
-    margin-bottom: 0.75rem;
-  }
-
-  h2 {
-    font-size: 1.35rem !important;
-    margin-bottom: 0.5rem;
-  }
-
-  h3 {
-    font-size: 1.15rem !important;
-  }
-
-  p {
-    font-size: 14px;
-    margin: 0.5rem 0;
-  }
-
-  /* Touch-friendly elements */
-  button, input[type="button"], input[type="submit"] {
-    min-height: 48px;
-    min-width: 48px;
-    padding: 12px 16px !important;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 6px;
-  }
-
-  a {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    padding: 12px;
-  }
-
-  /* Form inputs */
-  input, textarea, select {
-    font-size: 16px !important; /* Prevent zoom on iOS */
-    padding: 12px 16px !important;
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-  }
-
-  input:focus, textarea:focus, select:focus {
-    outline: none;
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-  }
-
-  /* Navbar optimization */
-  nav {
-    padding: 0 !important;
-    height: 64px !important;
-  }
-
-  nav button {
-    font-size: 12px;
-    padding: 8px 12px;
-  }
-
-  /* Gallery optimization */
-  section {
-    padding: 1.5rem 1rem !important;
-  }
-
-  .grid {
-    gap: 1rem !important;
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Images */
-  img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  /* Containers */
-  .container, .max-w-7xl, .max-w-6xl {
-    padding: 0 1rem !important;
-    margin: 0 auto !important;
-    width: 100% !important;
-  }
-
-  /* Gallery grids - 1 column on mobile */
-  .gallery-grid {
-    grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
-  }
-
-  .artists-grid {
-    grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
-  }
-
-  /* ========================================
-     CATEGORY TABS - Mobile-First Fix
-     ======================================== */
-
-  /* Category tabs wrapper - Enable horizontal scroll */
-  .category-tabs-wrapper {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    scrollbar-width: thin;
-    scrollbar-color: #d4af37 transparent;
-  }
-
-  .category-tabs-wrapper::-webkit-scrollbar {
-    height: 3px;
-  }
-
-  .category-tabs-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .category-tabs-wrapper::-webkit-scrollbar-thumb {
-    background: #d4af37;
-    border-radius: 2px;
-  }
-
-  .category-tabs-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #c9a227;
-  }
-
-  /* Tab button styles - Fixed sizing */
-  .category-tabs-wrapper button {
-    flex-shrink: 0;
-    min-width: auto;
-    padding: 0.5rem 0.75rem;
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Prevent text overflow in tabs */
-  .category-tabs-wrapper button {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    max-width: 140px;
-  }
-
-  /* Modal optimization */
-  .modal, [role="dialog"] {
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 1rem;
-  }
-
-  /* Reduce letter-spacing on mobile */
-  .tracking-widest {
-    letter-spacing: 0.05em;
-  }
-
-  .tracking-[0.4em] {
-    letter-spacing: 0.15em;
-  }
-
-  /* ========================================
-     GALLERY - Mobile Spacing Fix
-     ======================================== */
-
-  /* Gallery section header */
-  section[id="galerie"] {
-    padding: 1.5rem 1rem 2rem 1rem !important;
-    margin-top: 60px;
-  }
-
-  /* Header margin fixes */
-  section[id="galerie"] > div > div:first-child {
-    margin-bottom: 2rem !important;
-  }
-
-  /* Search bar height */
-  input[type="text"][placeholder*="Rechercher"] {
-    height: 3rem;
-    font-size: 14px;
-    padding: 0.75rem 0.75rem 0.75rem 2.75rem;
-  }
-
-  /* View mode tabs - ensure fixed height */
-  div[class*="gap-2"][class*="bg-emerald"] {
-    height: 3rem;
-  }
-
-  /* Category tabs container */
-  .category-tabs-wrapper {
-    margin-bottom: 2rem !important;
-  }
-
-  .category-tabs-wrapper > div {
-    padding-bottom: 0.75rem;
-  }
-
-  /* Touch target sizes - ensure 44-48px minimum */
-  button {
-    min-height: 44px;
-  }
-
-  /* Tab buttons */
-  .category-tabs-wrapper button {
-    min-height: 48px;
-  }
-
-  /* Navbar adjustment */
-  nav {
-    height: 60px !important;
-    min-height: 60px !important;
-  }
-
-  main, section {
-    margin-top: 60px;
-  }
-
-  /* Reduce excessive letter-spacing on mobile */
-  .tracking-widest,
-  .tracking-[0.3em],
-  .tracking-[0.4em] {
-    letter-spacing: 0.05em !important;
-  }
-
-  /* Fix body margin for navbar */
-  body {
-    padding-top: 0;
-  }
-
-  /* Ensure search has proper spacing */
-  input::placeholder {
-    color: rgba(5, 110, 67, 0.4);
-    font-size: 13px;
-  }
-}
-
-/* ========================================
-   SMALL DEVICES (480px - 640px)
-   ======================================== */
-@media (min-width: 480px) and (max-width: 640px) {
-  html {
-    font-size: 14px;
-  }
-
-  body {
-    font-size: 15px;
-  }
-
-  h1 {
-    font-size: 2rem !important;
-  }
-
-  h2 {
-    font-size: 1.5rem !important;
-  }
-
-  h3 {
-    font-size: 1.25rem !important;
-  }
-
-  button {
-    padding: 12px 18px !important;
-    font-size: 0.95rem;
-    min-height: 48px;
-  }
-
-  input, textarea, select {
-    font-size: 16px !important;
-    padding: 12px 14px !important;
-  }
-
-  section {
-    padding: 2rem 1.25rem !important;
-  }
-
-  .grid {
-    gap: 1.5rem !important;
-    grid-template-columns: 1fr !important;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1.5rem !important;
-  }
-
-  .artists-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1.5rem !important;
-  }
-
-  .max-w-7xl, .max-w-6xl {
-    padding: 0 1.25rem !important;
-  }
-}
-
-/* ========================================
-   MEDIUM DEVICES / TABLET (641px - 1024px)
-   ======================================== */
-@media (min-width: 641px) and (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
-
-  body {
-    font-size: 15px;
-  }
-
-  h1 {
-    font-size: 2.75rem !important;
-  }
-
-  h2 {
-    font-size: 2rem !important;
-  }
-
-  h3 {
-    font-size: 1.5rem !important;
-  }
-
-  button {
-    padding: 12px 24px !important;
-    font-size: 0.95rem;
-    min-height: 48px;
-  }
-
-  .grid {
-    gap: 2rem !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 2rem !important;
-  }
-
-  .artists-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 2rem !important;
-  }
-
-  section {
-    padding: 2.5rem 2rem !important;
-  }
-
-  .max-w-7xl, .max-w-6xl {
-    padding: 0 2rem !important;
-  }
-
-  nav {
-    padding: 1rem 2rem !important;
-  }
-}
-
-/* ========================================
-   LARGE DEVICES / DESKTOP (1025px+)
-   ======================================== */
-@media (min-width: 1025px) {
-  h1 {
-    font-size: 4rem !important;
-  }
-
-  h2 {
-    font-size: 2.5rem !important;
-  }
-
-  h3 {
-    font-size: 1.875rem !important;
-  }
-
-  button {
-    padding: 14px 32px !important;
-    font-size: 1rem;
-    min-height: 48px;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2.5rem !important;
-  }
-
-  .artists-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2.5rem !important;
-  }
-
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
-    gap: 2.5rem !important;
-  }
-
-  section {
-    padding: 3rem !important;
-  }
-
-  .max-w-7xl, .max-w-6xl {
-    padding: 0 3rem !important;
-  }
-
-  nav {
-    padding: 1rem 3rem !important;
-  }
-}
-
-/* ========================================
-   UTILITY CLASSES
-   ======================================== */
-
-html, body {
-  width: 100%;
-  overflow-x: hidden;
-}
-
 img {
   display: block;
   max-width: 100%;
   height: auto;
-}
-
-input, textarea, select {
-  font-size: 16px !important;
-  padding: 12px 16px !important;
-  width: 100%;
-  border-radius: 6px;
-  font-family: inherit;
 }
 
 a {
@@ -473,57 +30,128 @@ a {
   transition: all 0.3s ease;
 }
 
-/* Flex utilities for responsive */
-.flex-col {
+/* ========================================
+   CATEGORY TABS - Horizontal scroll
+   ======================================== */
+.category-tabs-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 transparent;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar {
+  height: 3px;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 2px;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #c9a227;
+}
+
+.category-tabs-wrapper button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ========================================
+   GALLERY MODAL — Scoped, can't be broken
+   ======================================== */
+.gallery-modal {
+  /* Ensure the modal is completely isolated from global grid overrides */
+  display: flex !important;
+  grid-template-columns: none !important;
+}
+
+.gallery-modal-inner {
+  /* Side-by-side layout on desktop, stacked on mobile */
+  display: flex;
   flex-direction: column;
 }
 
-.flex-row {
-  flex-direction: row;
+@media (min-width: 1024px) {
+  .gallery-modal-inner {
+    flex-direction: row;
+  }
 }
 
-/* Touch-friendly spacing */
-@media (max-width: 768px) {
-  .sm\:flex-col {
-    flex-direction: column;
+/* ========================================
+   ADMIN SIDEBAR — Scoped button reset
+   ======================================== */
+.admin-sidebar-btn {
+  /* Neutralize any global button overrides */
+  padding: 1rem 1.25rem !important;
+  min-height: auto !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  font-size: 0.875rem !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* ========================================
+   MOBILE ONLY — Extra Small (< 480px)
+   ======================================== */
+@media (max-width: 479px) {
+
+  /* iOS zoom prevention */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 
-  .sm\:w-full {
-    width: 100% !important;
-  }
-
-  .sm\:gap-2 {
-    gap: 0.5rem !important;
-  }
-
-  .sm\:px-4 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .sm\:py-2 {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-
-  /* Ensure minimum touch targets */
-  button[type="button"],
-  button[type="submit"],
-  a[role="button"],
-  [role="button"] {
+  /* Touch target minimums — links only (not buttons, to avoid breaking styled buttons) */
+  a:not([class]) {
     min-height: 44px;
-    min-width: 44px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+  }
+
+  /* Navbar */
+  nav {
+    height: 60px !important;
+    min-height: 60px !important;
+  }
+
+  /* Category tabs mobile spacing */
+  .category-tabs-wrapper {
+    margin-bottom: 2rem;
+  }
+
+  .category-tabs-wrapper>div {
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* ========================================
+   SMALL (480px - 640px)
+   ======================================== */
+@media (min-width: 480px) and (max-width: 640px) {
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
 
 /* ========================================
    ACCESSIBILITY
    ======================================== */
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -532,51 +160,20 @@ a {
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: more) {
-  * {
-    border-width: 2px;
-  }
-
   button {
     font-weight: bold;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1a1a1a;
-    color: #ffffff;
-  }
-
-  .bg-white {
-    background-color: #2a2a2a;
-  }
-
-  .text-gray-900 {
-    color: #ffffff;
-  }
-
-  .text-gray-700 {
-    color: #e0e0e0;
-  }
-
-  .text-gray-600 {
-    color: #b0b0b0;
-  }
-
-  .border-gray-200 {
-    border-color: #404040;
+    outline: 2px solid currentColor;
   }
 }
 
 /* ========================================
-   PRINT STYLES
+   PRINT
    ======================================== */
-
 @media print {
-  html, body {
+
+  html,
+  body {
     background: white;
     color: black;
   }
@@ -585,11 +182,8 @@ a {
     display: none !important;
   }
 
-  nav, footer {
+  nav,
+  footer {
     display: none;
-  }
-
-  button, a {
-    text-decoration: underline;
   }
 }

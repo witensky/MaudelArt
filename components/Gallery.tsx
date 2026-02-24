@@ -1,11 +1,177 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, ChevronLeft, ChevronRight, Share2, Info, Grid, Layers, Users, Search, ShoppingBag, Loader2 } from 'lucide-react';
+import { X, Maximize2, ChevronLeft, ChevronRight, Info, Grid, Layers, Users, Search, ShoppingBag, Loader2, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { Artwork } from '../types';
 
 // Fallback constants if DB fails or for initial render
 import { AUTHORS as STATIC_AUTHORS, COLLECTIONS as STATIC_COLLECTIONS } from '../constants';
+
+// ─── Gallery Modal via Portal (bypasses parent overflow:hidden) ───────────────
+interface GalleryModalProps {
+  artwork: Artwork;
+  authors: any[];
+  direction: number;
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onPurchase?: (artwork: Artwork) => void;
+}
+
+const slideVariantsModal = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 100 : direction < 0 ? -100 : 0,
+    opacity: 0,
+    scale: 0.95
+  }),
+  center: { zIndex: 1, x: 0, opacity: 1, scale: 1 },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 100 : direction > 0 ? -100 : 0,
+    opacity: 0,
+    scale: 0.95
+  })
+};
+
+const GalleryModal: React.FC<GalleryModalProps> = ({
+  artwork, authors, direction, onClose, onNext, onPrev, onPurchase
+}) => {
+  const author = authors.find(a => a.id === artwork.authorId);
+
+  const modal = (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(2,13,10,0.96)', backdropFilter: 'blur(12px)', cursor: 'zoom-out' }}
+      />
+
+      {/* Close button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        onClick={onClose}
+        aria-label="Fermer"
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10001 }}
+        className="w-12 h-12 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all group"
+      >
+        <X size={22} className="group-hover:rotate-90 transition-transform duration-500" />
+      </motion.button>
+
+      {/* Prev / Next arrows */}
+      <div style={{ position: 'absolute', inset: '0 0 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', zIndex: 10001, pointerEvents: 'none' }}>
+        <motion.button
+          initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
+          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          style={{ pointerEvents: 'auto' }}
+          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-black/50 hover:bg-[#d4af37] text-white hover:text-emerald-950 rounded-full border border-white/10 hover:border-[#d4af37] transition-all shadow-2xl backdrop-blur-sm"
+        >
+          <ChevronLeft size={22} />
+        </motion.button>
+        <motion.button
+          initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}
+          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          style={{ pointerEvents: 'auto' }}
+          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-black/50 hover:bg-[#d4af37] text-white hover:text-emerald-950 rounded-full border border-white/10 hover:border-[#d4af37] transition-all shadow-2xl backdrop-blur-sm"
+        >
+          <ChevronRight size={22} />
+        </motion.button>
+      </div>
+
+      {/* Modal panel */}
+      <motion.div
+        key={artwork.id}
+        custom={direction}
+        variants={slideVariantsModal}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{
+          x: { type: 'tween', ease: [0.22, 1, 0.36, 1], duration: 0.45 },
+          opacity: { duration: 0.35 },
+          scale: { duration: 0.45 }
+        }}
+        style={{ position: 'relative', zIndex: 10000, width: '100%', maxWidth: '1280px' }}
+        className="h-[100dvh] md:h-auto md:max-h-[88vh] bg-[#064e3b] shadow-[0_60px_150px_-20px_rgba(0,0,0,0.85)] flex flex-col lg:flex-row overflow-hidden rounded-none md:rounded-xl border border-white/5 mx-0 md:mx-4 lg:mx-8"
+      >
+        {/* Image panel */}
+        <div className="w-full flex-shrink-0 h-[42vh] lg:h-auto lg:w-[58%] bg-[#032318] flex items-center justify-center p-4 md:p-10 border-b lg:border-b-0 lg:border-r border-white/5">
+          <img
+            src={artwork.image}
+            alt={artwork.title}
+            className="w-full h-full object-contain shadow-2xl max-h-[38vh] lg:max-h-none"
+          />
+        </div>
+
+        {/* Info panel */}
+        <div className="w-full lg:w-[42%] bg-[#064e3b] flex flex-col overflow-y-auto">
+          <div className="flex-1 p-6 md:p-10 space-y-6 md:space-y-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+            >
+              <span className="text-[#d4af37] text-[10px] font-black uppercase tracking-[0.4em] block mb-3">
+                {artwork.category} — {artwork.year}
+              </span>
+              <h2 className="text-3xl md:text-4xl serif text-white mb-4 leading-tight">{artwork.title}</h2>
+              <div className="w-10 h-0.5 bg-[#d4af37]/40 mb-4" />
+              <p className="text-sm text-white/65 serif italic leading-relaxed">"{artwork.description}"</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.5 }}
+              className="space-y-3 pt-6 border-t border-white/10"
+            >
+              {[
+                { label: 'Technique', value: artwork.technique },
+                { label: 'Dimensions', value: artwork.dimensions },
+                { label: 'Artiste', value: author?.name },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{label}</span>
+                  <span className="text-sm font-medium text-white/90">{value || '—'}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Action buttons — sticky at bottom */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="p-6 md:p-10 pt-0 space-y-3 pb-8 md:pb-10"
+          >
+            <button
+              onClick={() => onPurchase?.(artwork)}
+              className="w-full bg-[#d4af37] text-emerald-950 px-6 py-4 font-black uppercase tracking-[0.25em] text-[10px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-xl group rounded-xl active:scale-95"
+            >
+              Acquérir cette œuvre <ShoppingBag size={16} className="group-hover:scale-110 transition-transform" />
+            </button>
+            <button className="w-full border border-white/15 text-white/60 px-6 py-3.5 font-black uppercase tracking-[0.25em] text-[9px] flex items-center justify-center gap-2 hover:text-white hover:bg-white/5 transition-all rounded-xl active:scale-95">
+              S'informer <Info size={14} />
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  return ReactDOM.createPortal(modal, document.body);
+};
+
 
 type GalleryView = 'all' | 'collections' | 'authors';
 
@@ -21,39 +187,52 @@ interface ArtworkCardProps {
   onSelect: (index: number) => void;
 }
 
-const ArtworkCard: React.FC<ArtworkCardProps> = ({ art, index, authors, onSelect }) => {
+const ArtworkCard = React.memo<ArtworkCardProps>(({ art, index, authors, onSelect }) => {
   const author = authors.find(a => a.id === art.authorId);
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -10 }}
-      className="group cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      whileHover={{ y: -8 }}
+      className="group cursor-pointer relative"
       onClick={() => onSelect(index)}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-white p-3 border border-emerald-950/10 transition-all duration-500 shadow-sm group-hover:shadow-xl">
-        <div className="w-full h-full overflow-hidden relative bg-[#f5f5f0]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-white p-3 sm:p-4 border border-emerald-950/5 transition-all duration-700 shadow-[0_4px_25px_rgba(0,0,0,0.02)] group-hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] group-hover:border-emerald-950/10 rounded-sm">
+        <div className="w-full h-full overflow-hidden relative bg-[#f5f5f0] rounded-sm">
           <motion.img
             src={art.image}
             alt={art.title}
-            className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-[2.5s] ease-out group-hover:scale-110"
+            decoding="async"
           />
-          <div className="absolute inset-0 bg-emerald-950/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-            <Maximize2 size={24} className="text-white" />
+          <div className="absolute inset-0 bg-emerald-950/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center backdrop-blur-[2px]">
+            <div className="p-3 bg-white/90 backdrop-blur-md rounded-full shadow-2xl scale-0 group-hover:scale-100 transition-transform duration-500 delay-100">
+              <Maximize2 size={20} className="text-[#d4af37]" />
+            </div>
           </div>
         </div>
       </div>
-      <div className="mt-6">
-        <h3 className="text-xl serif text-emerald-950 group-hover:text-[#d4af37] transition-colors line-clamp-1">{art.title}</h3>
-        <p className="text-[9px] uppercase tracking-widest text-emerald-950/40 font-black mt-2">
-          {author?.name} — {art.year}
-        </p>
+      <div className="mt-5 space-y-2 px-1">
+        <div className="flex justify-between items-start gap-4">
+          <h3 className="text-lg sm:text-xl serif text-emerald-950 transition-colors duration-300 group-hover:text-[#d4af37] leading-tight flex-1">
+            {art.title}
+          </h3>
+          <span className="text-[9px] font-black tracking-widest text-[#d4af37] border border-[#d4af37]/20 px-1.5 py-0.5 rounded">
+            {art.year}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-[1px] bg-[#d4af37]/30" />
+          <p className="text-[9px] uppercase tracking-[0.2em] text-emerald-950/40 font-black">
+            {author?.name || 'Artiste Indépendant'}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
-};
+});
 
 const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) => {
   const [viewMode, setViewMode] = useState<GalleryView>('all');
@@ -72,17 +251,22 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        // Fetch Artworks
+        // Fetch Artworks containing strict fields to avoid heavy JSONB columns (like gallery_images)
+        // includes joined category name to avoid manual lookup
         const { data: artsData } = await supabase
           .from('artworks')
-          .select('*')
+          .select(`
+            id, title, technique, dimensions, year, image_url, description, 
+            author_id, collection_id, category_id, is_active, created_at,
+            categories (name)
+          `)
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
-        // Fetch Categories for filter
+        // Fetch Categories for filter tabs
         const { data: catsData } = await supabase.from('categories').select('*');
 
-        // Fetch Authors & Collections 
+        // Fetch Authors & Collections for sections/views
         const { data: authData } = await supabase.from('authors').select('*');
         const { data: collData } = await supabase.from('collections').select('*');
 
@@ -94,11 +278,11 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
         if (collData && collData.length > 0) setCollections(collData.map(c => ({ ...c, coverImage: c.cover_image_url })));
 
         if (artsData) {
-          // Map DB snake_case to Frontend types (camelCase/legacy)
-          const mappedArtworks: Artwork[] = artsData.map(a => ({
+          // Map DB snake_case & joined data to Frontend types
+          const mappedArtworks: Artwork[] = artsData.map((a: any) => ({
             id: a.id,
             title: a.title,
-            category: catsData?.find(c => c.id === a.category_id)?.name || 'Unknown',
+            category: a.categories?.name || 'Unknown', // Use joined data
             authorId: a.author_id,
             collectionId: a.collection_id,
             year: a.year,
@@ -171,114 +355,141 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
 
 
 
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : direction < 0 ? -100 : 0,
-      opacity: 0,
-      scale: 0.95
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 100 : direction > 0 ? -100 : 0,
-      opacity: 0,
-      scale: 0.95
-    })
-  };
+  const handleSelect = useCallback((index: number) => {
+    setDirection(0);
+    setSelectedIndex(index);
+  }, []);
+
+
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fcfcf9]">
-        <Loader2 className="animate-spin text-emerald-600" size={40} />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fcfcf9] space-y-8">
+        <div className="relative">
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="w-24 h-24 rounded-full border border-[#d4af37]/20 flex items-center justify-center"
+          >
+            <div className="w-16 h-16 rounded-full border border-[#d4af37]/40" />
+          </motion.div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="animate-spin text-[#d4af37]" size={24} strokeWidth={1.5} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4af37] animate-pulse">
+            MaudelArt
+          </span>
+          <span className="text-xs text-emerald-950/30 serif italic">Chargement de la galerie...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <section id="galerie" className="pt-20 sm:pt-32 lg:pt-40 pb-20 sm:pb-32 bg-[#fcfcf9] px-4 sm:px-6 lg:px-8 min-h-screen">
+    <section id="galerie" className="pt-8 sm:pt-16 lg:pt-24 pb-20 sm:pb-32 bg-[#fcfcf9] px-4 sm:px-6 lg:px-8 min-h-screen">
       <div className="w-full max-w-7xl mx-auto">
-        {/* Header Section - Optimized for mobile */}
-        <div className="flex flex-col items-center mb-8 sm:mb-12 lg:mb-24">
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-[#d4af37] uppercase tracking-[0.2em] text-[10px] sm:text-xs font-bold mb-2 sm:mb-4 block text-center"
-          >
-            Catalogue d'Exception
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+        {/* Header Section - Content-First Redesign */}
+        <div className="flex flex-col items-center mb-8 sm:mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl serif text-emerald-950 mb-6 sm:mb-10 text-center leading-tight"
+            className="flex flex-col items-center text-center space-y-2 sm:space-y-4 max-w-2xl"
           >
-            La Galerie
-          </motion.h2>
-
-          {/* Search Bar - Full width on mobile */}
-          <div className="w-full max-w-2xl relative group">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-emerald-950/30 group-focus-within:text-[#d4af37] transition-colors">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher une œuvre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-emerald-950/10 py-2 sm:py-4 pl-14 pr-4 rounded-xl shadow-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/10 transition-all text-sm sm:text-base placeholder:text-emerald-950/40 text-emerald-950 h-12 sm:h-[52px]"
-            />
-          </div>
+            <span className="text-[#d4af37] uppercase tracking-[0.4em] text-[9px] sm:text-[10px] font-black">
+              Collection Exclusive
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl serif text-emerald-950 leading-tight tracking-tight">
+              Galerie
+            </h1>
+            <p className="text-emerald-950/50 text-sm sm:text-base serif italic max-w-xl leading-relaxed">
+              Sélection méticuleuse d'œuvres originales, sérénité et élégance tropicale.
+            </p>
+          </motion.div>
         </div>
 
-        {/* View Mode & Category Tabs - Redesigned for mobile */}
-        <div className="mb-8 sm:mb-12 lg:mb-16">
-          {/* View Mode Tabs - Classic Design */}
-          <div className="mb-8 w-full max-w-lg mx-auto bg-gray-100 p-1.5 rounded-xl flex gap-1 shadow-inner">
-            {[
-              { id: 'all', label: 'Œuvres', icon: Grid },
-              { id: 'collections', label: 'Collections', icon: Layers },
-              { id: 'authors', label: 'Artistes', icon: Users },
-            ].map((view) => (
-              <button
-                key={view.id}
-                onClick={() => setViewMode(view.id as GalleryView)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 ${viewMode === view.id
-                  ? 'bg-white text-emerald-950 shadow-sm ring-1 ring-black/5 scale-100'
-                  : 'text-gray-400 hover:text-emerald-950 hover:bg-black/5'
-                  }`}
-              >
-                <view.icon size={14} className={viewMode === view.id ? "text-[#d4af37]" : "opacity-50"} />
-                <span className={viewMode === view.id ? "" : "hidden sm:inline"}>{view.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Compact Navigation & Search Toolbar */}
+        <div className="mb-12 border-y border-emerald-950/5 py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            {/* View & Categories Group */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+              {/* Primary View Selector — Very Compact */}
+              <div className="inline-flex p-1 bg-gray-100/50 rounded-xl border border-black/5">
+                {[
+                  { id: 'all', label: 'Œuvres', icon: Grid },
+                  { id: 'collections', label: 'Collections', icon: Layers },
+                  { id: 'authors', label: 'Artistes', icon: Users },
+                ].map((view) => {
+                  const isActive = viewMode === view.id;
+                  const Icon = view.icon;
+                  return (
+                    <button
+                      key={view.id}
+                      onClick={() => setViewMode(view.id as GalleryView)}
+                      className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${isActive ? 'text-emerald-950' : 'text-emerald-950/40'
+                        }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <Icon size={12} className={`relative z-10 ${isActive ? 'text-[#d4af37]' : 'opacity-40'}`} />
+                      <span className="relative z-10">{view.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-          {/* Category Filter Tabs - Scrollable container */}
-          <div className="category-tabs-wrapper overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 pb-2">
-            <div className="flex gap-2 sm:gap-4 pb-3 w-max min-w-full sm:justify-center relative px-2">
-              {categories.map((cat, idx) => (
+              <div className="hidden sm:block w-px h-6 bg-emerald-950/10" />
+
+              {/* Secondary Categories — Scrollable row */}
+              <div className="overflow-x-auto no-scrollbar max-w-full sm:max-w-[400px]">
+                <div className="flex items-center gap-4">
+                  {categories.map((cat) => {
+                    const isActive = filter === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setFilter(cat)}
+                        className={`whitespace-nowrap text-[10px] uppercase tracking-widest transition-colors ${isActive ? 'text-[#d4af37] font-black' : 'text-emerald-950/40 font-bold hover:text-emerald-950'
+                          }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Search Bar — Integrated into the row */}
+            <div className="relative w-full lg:w-72">
+              <Search
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/30"
+              />
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-11 bg-white border border-emerald-950/10 pl-11 pr-10 rounded-xl text-xs focus:outline-none focus:border-[#d4af37]/40 transition-all font-medium"
+              />
+              {searchQuery.length > 0 && (
                 <button
-                  key={`${cat}-${idx}`}
-                  onClick={() => setFilter(cat)}
-                  className={`relative text-xs sm:text-sm uppercase tracking-[0.1em] transition-colors font-bold whitespace-nowrap py-2 px-3 sm:px-4 flex-shrink-0 h-10 flex items-center justify-center ${filter === cat
-                    ? 'text-[#d4af37]'
-                    : 'text-emerald-950/40 hover:text-emerald-950/70'
-                    }`}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-950/20 hover:text-emerald-950"
                 >
-                  {cat}
-                  {filter === cat && (
-                    <motion.div
-                      layoutId="catUnder"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d4af37] rounded-t"
-                      transition={{ type: 'spring', stiffness: 380, damping: 40 }}
-                    />
-                  )}
+                  <X size={14} />
                 </button>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -288,7 +499,7 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             <motion.div
               key="all-grid"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10 md:gap-12 lg:gap-16"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 sm:gap-x-8 sm:gap-y-16 lg:gap-x-10 lg:gap-y-20"
             >
               {filteredArtworks.map((art, idx) => (
                 <ArtworkCard
@@ -296,7 +507,7 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
                   art={art}
                   index={idx}
                   authors={authors}
-                  onSelect={(i) => { setDirection(0); setSelectedIndex(i); }}
+                  onSelect={handleSelect}
                 />
               ))}
             </motion.div>
@@ -305,26 +516,37 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
           {viewMode === 'collections' && (
             <motion.div
               key="collections-grid"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="space-y-16 sm:space-y-24 md:space-y-32"
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-32 sm:space-y-48"
             >
-              {collections.map((col) => {
+              {collections.map((col, colIdx) => {
                 const colArtworks = filteredArtworks.filter(a => a.collectionId === col.id);
                 if (colArtworks.length === 0) return null;
                 return (
-                  <div key={col.id} className="space-y-8 sm:space-y-10 md:space-y-12">
-                    <div className="border-l-4 border-[#d4af37] pl-4 sm:pl-6 md:pl-8">
-                      <h3 className="text-2xl sm:text-3xl md:text-4xl serif text-emerald-950 mb-2 sm:mb-3 md:mb-4">{col.name}</h3>
-                      <p className="text-emerald-950/50 text-xs sm:text-sm leading-relaxed max-w-2xl">{col.description}</p>
+                  <div key={col.id} className="space-y-12 sm:space-y-16">
+                    <div className="relative max-w-3xl">
+                      <div className="flex items-center gap-6 mb-4">
+                        <div className="w-12 h-px bg-[#d4af37]/40" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4af37]">
+                          Collection {String(colIdx + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <h3 className="text-3xl sm:text-4xl md:text-5xl serif text-emerald-950 mb-6 leading-tight tracking-tight">
+                        {col.name}
+                      </h3>
+                      <p className="text-emerald-950/60 text-sm sm:text-base leading-relaxed serif italic border-l-2 border-[#d4af37]/20 pl-6">
+                        {col.description}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-                      {colArtworks.map((art) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 sm:gap-x-8 sm:gap-y-16 lg:gap-x-10 lg:gap-y-20">
+                      {colArtworks.map((art, artIdx) => (
                         <ArtworkCard
                           key={art.id}
                           art={art}
-                          index={filteredArtworks.findIndex(fa => fa.id === art.id)}
+                          index={artIdx}
                           authors={authors}
-                          onSelect={(i) => { setDirection(0); setSelectedIndex(i); }}
+                          onSelect={handleSelect}
                         />
                       ))}
                     </div>
@@ -337,31 +559,39 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
           {viewMode === 'authors' && (
             <motion.div
               key="authors-grid"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="space-y-20 sm:space-y-32 md:space-y-40"
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-32 sm:space-y-48"
             >
               {authors.map((author) => {
                 const authorArtworks = filteredArtworks.filter(a => a.authorId === author.id);
                 if (authorArtworks.length === 0) return null;
                 return (
-                  <div key={author.id} className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
-                    <div className="lg:col-span-3">
-                      <div className="sticky top-20 sm:top-24 bg-white p-6 sm:p-8 border border-emerald-950/10 shadow-sm rounded-xl">
-                        <div className="w-20 sm:w-24 h-20 sm:h-24 overflow-hidden border border-emerald-950/10 mb-4 sm:mb-6 mx-auto lg:mx-0">
-                          <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
+                  <div key={author.id} className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 lg:gap-24 items-start">
+                    <div className="lg:col-span-4">
+                      <div className="sticky top-24 sm:top-32 bg-white p-8 sm:p-12 border border-emerald-950/5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] rounded-2xl text-center lg:text-left">
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 overflow-hidden border-2 border-[#d4af37]/20 mb-8 mx-auto lg:mx-0 rounded-full p-2 relative">
+                          <div className="absolute inset-0 border border-emerald-950/5 rounded-full" />
+                          <img src={author.avatar} alt={author.name} className="w-full h-full object-cover rounded-full" />
                         </div>
-                        <h3 className="text-lg sm:text-xl md:text-2xl serif text-emerald-950 mb-2 sm:mb-3 md:mb-4 text-center lg:text-left">{author.name}</h3>
-                        <p className="text-[11px] sm:text-xs text-emerald-950/60 leading-relaxed italic text-center lg:text-left">{author.bio}</p>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#d4af37] block mb-4">
+                          Profil Artiste
+                        </span>
+                        <h3 className="text-3xl sm:text-4xl serif text-emerald-950 mb-6 leading-tight">{author.name}</h3>
+                        <div className="w-12 h-0.5 bg-[#d4af37]/30 mb-6 mx-auto lg:mx-0" />
+                        <p className="text-sm sm:text-base text-emerald-950/60 leading-relaxed serif italic">
+                          {author.bio || "Artiste plasticien explorant l'harmonie des couleurs et des formes à travers des œuvres contemporaines d'une grande profondeur émotionnelle."}
+                        </p>
                       </div>
                     </div>
-                    <div className="lg:col-span-9 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                      {authorArtworks.map((art) => (
+                    <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-12 sm:gap-x-8 sm:gap-y-16">
+                      {authorArtworks.map((art, artIdx) => (
                         <ArtworkCard
                           key={art.id}
                           art={art}
-                          index={filteredArtworks.findIndex(fa => fa.id === art.id)}
+                          index={artIdx}
                           authors={authors}
-                          onSelect={(i) => { setDirection(0); setSelectedIndex(i); }}
+                          onSelect={handleSelect}
                         />
                       ))}
                     </div>
@@ -375,139 +605,15 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
 
       <AnimatePresence>
         {selectedArtwork && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[5000] flex items-center justify-center p-0 md:p-4 lg:p-12"
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedIndex(null)}
-              className="absolute inset-0 bg-[#020d0a]/95 backdrop-blur-md cursor-zoom-out"
-            />
-
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => setSelectedIndex(null)}
-              className="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 md:w-14 md:h-14 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all z-[5200] group"
-            >
-              <X size={20} className="md:w-7 md:h-7 group-hover:rotate-90 transition-transform duration-500" />
-            </motion.button>
-
-            {/* Navigation 2D Intégrée */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 md:px-8 lg:px-12 z-[5100] pointer-events-none">
-              <motion.button
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                whileHover={{ scale: 1.1, x: -5 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.stopPropagation(); prevArtwork(); }}
-                className="w-12 h-12 md:w-20 md:h-20 flex items-center justify-center bg-black/20 md:bg-white/5 hover:bg-[#d4af37] text-white hover:text-emerald-950 rounded-full border border-white/10 hover:border-[#d4af37] transition-all pointer-events-auto shadow-2xl group backdrop-blur-sm"
-              >
-                <ChevronLeft size={24} className="md:w-10 md:h-10 group-hover:-translate-x-1 transition-transform" />
-              </motion.button>
-
-              <motion.button
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30 }}
-                whileHover={{ scale: 1.1, x: 5 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.stopPropagation(); nextArtwork(); }}
-                className="w-12 h-12 md:w-20 md:h-20 flex items-center justify-center bg-black/20 md:bg-white/5 hover:bg-[#d4af37] text-white hover:text-emerald-950 rounded-full border border-white/10 hover:border-[#d4af37] transition-all pointer-events-auto shadow-2xl group backdrop-blur-sm"
-              >
-                <ChevronRight size={24} className="md:w-10 md:h-10 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-            </div>
-
-            <motion.div
-              key={selectedArtwork.id}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
-                opacity: { duration: 0.4 },
-                scale: { duration: 0.5 }
-              }}
-              className="relative max-w-[1280px] w-full h-[100dvh] md:h-auto md:max-h-[85vh] bg-[#064e3b] shadow-[0_60px_150px_-20px_rgba(0,0,0,0.8)] flex flex-col lg:flex-row z-[5050] overflow-hidden rounded-none md:rounded-sm border border-white/5"
-            >
-              <div className="w-full h-[40vh] lg:h-auto lg:w-[60%] bg-[#042f24] flex items-center justify-center p-4 md:p-12 border-b lg:border-b-0 lg:border-r border-white/5 overflow-hidden relative">
-                <motion.img
-                  layoutId={`artwork-${selectedArtwork.id}`}
-                  src={selectedArtwork.image}
-                  alt={selectedArtwork.title}
-                  className="w-full h-full object-contain shadow-2xl"
-                />
-              </div>
-
-              <div className="w-full lg:w-[40%] bg-[#064e3b] p-6 md:p-16 flex flex-col justify-between overflow-y-auto flex-1">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                  className="space-y-6 md:space-y-12"
-                >
-                  <div>
-                    <div className="flex items-center gap-4 mb-4 md:mb-6">
-                      <span className="text-[#d4af37] text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em]">
-                        {selectedArtwork.category} — {selectedArtwork.year}
-                      </span>
-                    </div>
-                    <h2 className="text-3xl md:text-5xl serif text-white mb-6 md:mb-8 leading-tight">
-                      {selectedArtwork.title}
-                    </h2>
-                    <div className="w-12 h-0.5 bg-[#d4af37]/30 mb-6 md:mb-8" />
-                    <p className="text-sm md:text-base text-white/70 serif italic leading-relaxed">
-                      "{selectedArtwork.description}"
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 py-8 border-t border-white/10">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Technique</span>
-                      <span className="text-sm font-medium text-white">{selectedArtwork.technique}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Dimensions</span>
-                      <span className="text-sm font-medium text-white">{selectedArtwork.dimensions}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Artiste</span>
-                      <span className="text-sm font-medium text-white">
-                        {authors.find(a => a.id === selectedArtwork.authorId)?.name}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
-                  className="mt-8 md:mt-12 space-y-3 md:space-y-4 pb-8 md:pb-0"
-                >
-                  <button
-                    onClick={() => onPurchase?.(selectedArtwork)}
-                    className="w-full bg-[#d4af37] text-emerald-950 px-8 py-4 md:py-5 font-black uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-xl shadow-black/20 group rounded-sm"
-                  >
-                    Acquérir cette œuvre <ShoppingBag size={18} className="group-hover:scale-110 transition-transform" />
-                  </button>
-                  <button className="w-full border border-white/10 text-white/60 px-8 py-4 font-black uppercase tracking-[0.3em] text-[9px] flex items-center justify-center gap-3 hover:text-white hover:bg-white/5 transition-all rounded-sm">
-                    S'informer <Info size={14} />
-                  </button>
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
+          <GalleryModal
+            artwork={selectedArtwork}
+            authors={authors}
+            direction={direction}
+            onClose={() => setSelectedIndex(null)}
+            onNext={nextArtwork}
+            onPrev={prevArtwork}
+            onPurchase={onPurchase}
+          />
         )}
       </AnimatePresence>
     </section>

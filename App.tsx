@@ -1,27 +1,43 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { supabase } from './supabaseClient';
-import AdminLogin from './components/Admin/Login';
-import Dashboard from './components/Admin/Dashboard';
-import Profile from './components/Profile';
-import Artists from './components/Artists';
 import Navbar from './components/Navbar';
 import HeroNew from './components/Hero';
-import Gallery from './components/Gallery';
-import Biography from './components/Biography';
-import Inspiration from './components/Inspiration';
-import Contact from './components/Contact';
-import Auth from './components/Auth';
-import Checkout from './components/Checkout';
-import { Blog } from './components/Blog';
 import ArtPreviewCarousel from './components/ArtPreviewCarousel';
 import { Instagram, Facebook, Twitter, Mail, ArrowUpRight } from 'lucide-react';
 import { Artwork } from './types';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import './index.css'
 
+// Default social links (overridden by site_settings from Supabase at runtime)
+const DEFAULT_SOCIAL_LINKS = {
+  instagram: 'https://www.instagram.com/mariemaude_eliacin/',
+  facebook: 'https://www.facebook.com/mariemaudeeliacin',
+  twitter: 'https://twitter.com/mariemaudelart',
+  email: 'mailto:contact@mariemaudeart.com',
+};
+
+// Lazy load components for performance
+const AdminLogin = React.lazy(() => import('./components/Admin/Login'));
+const Dashboard = React.lazy(() => import('./components/Admin/Dashboard'));
+const Profile = React.lazy(() => import('./components/Profile'));
+const Artists = React.lazy(() => import('./components/Artists'));
+const Gallery = React.lazy(() => import('./components/Gallery'));
+const Biography = React.lazy(() => import('./components/Biography'));
+const Inspiration = React.lazy(() => import('./components/Inspiration'));
+const Contact = React.lazy(() => import('./components/Contact'));
+const Auth = React.lazy(() => import('./components/Auth'));
+const Checkout = React.lazy(() => import('./components/Checkout'));
+const Blog = React.lazy(() => import('./components/Blog'));
 
 export type View = 'home' | 'gallery' | 'bio' | 'inspiration' | 'contact' | 'blog' | 'auth' | 'checkout' | 'admin' | 'profile' | 'artists';
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-[50vh] w-full">
+    <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -29,6 +45,30 @@ const App: React.FC = () => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [selectedArtistFilter, setSelectedArtistFilter] = useState<string | null>(null);
+  const [socialLinks, setSocialLinks] = useState(DEFAULT_SOCIAL_LINKS);
+
+  // Load social links from site_settings
+  useEffect(() => {
+    const loadSocialLinks = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('instagram_url, facebook_url, twitter_url, email_address')
+          .single();
+        if (data) {
+          setSocialLinks({
+            instagram: data.instagram_url || DEFAULT_SOCIAL_LINKS.instagram,
+            facebook: data.facebook_url || DEFAULT_SOCIAL_LINKS.facebook,
+            twitter: data.twitter_url || DEFAULT_SOCIAL_LINKS.twitter,
+            email: data.email_address ? `mailto:${data.email_address}` : DEFAULT_SOCIAL_LINKS.email,
+          });
+        }
+      } catch (_) {
+        // silently use defaults
+      }
+    };
+    loadSocialLinks();
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -84,19 +124,27 @@ const App: React.FC = () => {
   }, []);
 
   const pageVariants: Variants = {
-    initial: { opacity: 0 },
+    initial: {
+      opacity: 0,
+      scale: 0.98,
+      filter: 'blur(10px)'
+    },
     enter: {
       opacity: 1,
+      scale: 1,
+      filter: 'blur(0px)',
       transition: {
-        duration: 0.8,
-        ease: [0.43, 0.13, 0.23, 0.96] as any
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1]
       }
     },
     exit: {
       opacity: 0,
+      scale: 1.02,
+      filter: 'blur(10px)',
       transition: {
         duration: 0.4,
-        ease: [0.43, 0.13, 0.23, 0.96] as any
+        ease: [0.22, 1, 0.36, 1]
       }
     }
   };
@@ -126,27 +174,27 @@ const App: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 1 }}
                 >
-                  <h2 className="text-4xl md:text-6xl serif text-emerald-950 leading-relaxed mb-10">
+                  <h2 className="text-4xl md:text-6xl serif text-maudel-dark leading-relaxed mb-10">
                     "L'art ne reproduit pas le visible ; il rend visible."
                   </h2>
-                  <div className="w-16 h-px bg-[#d4af37] mx-auto mb-6" />
-                  <p className="text-[#d4af37] tracking-[0.4em] uppercase text-xs font-bold">— Paul Klee</p>
+                  <div className="w-16 h-px bg-gold mx-auto mb-6" />
+                  <p className="text-gold tracking-[0.4em] uppercase text-xs font-bold">— Paul Klee</p>
                 </motion.div>
               </div>
             </section>
 
             <ArtPreviewCarousel />
 
-            <div className="bg-[#fcfcf9] py-32 px-6 text-center">
+            <div className="bg-cream py-32 px-6 text-center">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-3xl md:text-5xl serif text-emerald-950 mb-12">Plongez dans l'intégralité de l'œuvre</h3>
+                <h3 className="text-3xl md:text-5xl serif text-maudel-dark mb-12">Plongez dans l'intégralité de l'œuvre</h3>
                 <button
                   onClick={() => handleLinkClick('gallery')}
-                  className="group relative px-12 py-5 bg-emerald-950 text-[#d4af37] uppercase tracking-[0.3em] text-xs transition-all font-bold hover:bg-[#d4af37] hover:text-emerald-950 shadow-2xl"
+                  className="group relative px-12 py-5 bg-maudel-dark text-gold uppercase tracking-[0.3em] text-xs transition-all font-bold hover:bg-gold hover:text-maudel-dark shadow-2xl"
                 >
                   Visiter la Galerie
                 </button>
@@ -196,17 +244,19 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#041a14] min-h-screen selection:bg-[#d4af37] selection:text-[#041a14]">
-      <Navbar setView={setCurrentView} currentView={currentView} isAdmin={isAdminAuthenticated} user={user} />
-      <main className="scroll-container overflow-x-hidden">
+    <div className="bg-maudel-dark min-h-screen selection:bg-gold selection:text-maudel-dark">
+      {currentView !== 'admin' && <Navbar setView={setCurrentView} currentView={currentView} isAdmin={isAdminAuthenticated} user={user} />}
+      <main className="scroll-container">
         <AnimatePresence mode="wait">
-          {renderView()}
+          <Suspense fallback={<LoadingFallback />}>
+            {renderView()}
+          </Suspense>
         </AnimatePresence>
       </main>
 
       {/* Global Footer */}
       {!['contact', 'auth', 'checkout'].includes(currentView) && (
-        <footer className="bg-[#020d0a] py-24 px-6 border-t border-white/5 relative overflow-hidden">
+        <footer className="bg-maudel-darker py-24 px-6 border-t border-white/5 relative overflow-hidden">
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full -z-10" />
 
           <div className="max-w-7xl mx-auto">
@@ -218,15 +268,27 @@ const App: React.FC = () => {
                   className="cursor-pointer inline-block"
                 >
                   <span className="text-3xl font-black text-white tracking-tighter">
-                    MaudelArt<span className="text-[#34d399]">.</span>
+                    MaudelArt<span className="text-emerald-400">.</span>
                   </span>
                 </div>
                 <p className="text-white/40 text-sm leading-relaxed max-w-sm">
                   Une immersion dans l'univers pictural de Marie Maude Eliacin, où chaque coup de pinceau est une émotion partagée.
                 </p>
                 <div className="flex space-x-6">
-                  {[Instagram, Facebook, Twitter, Mail].map((Icon, i) => (
-                    <a key={i} href="#" className="text-white/30 hover:text-emerald-400 transition-all">
+                  {([
+                    { Icon: Instagram, href: socialLinks.instagram, label: 'Instagram' },
+                    { Icon: Facebook, href: socialLinks.facebook, label: 'Facebook' },
+                    { Icon: Twitter, href: socialLinks.twitter, label: 'Twitter / X' },
+                    { Icon: Mail, href: socialLinks.email, label: 'Email de contact' },
+                  ] as const).map(({ Icon, href, label }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      aria-label={label}
+                      target={href.startsWith('mailto') ? undefined : '_blank'}
+                      rel="noreferrer noopener"
+                      className="text-white/30 hover:text-emerald-400 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-sm"
+                    >
                       <Icon size={20} strokeWidth={1.5} />
                     </a>
                   ))}
@@ -296,4 +358,11 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+// Wrap with CurrencyProvider at module level
+const AppWithProviders: React.FC = () => (
+  <CurrencyProvider>
+    <App />
+  </CurrencyProvider>
+);
+
+export default AppWithProviders;

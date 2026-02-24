@@ -31,12 +31,21 @@ const StatItem = ({ value, label, index }: { value: string; label: string; index
   </motion.div>
 );
 
+const DEFAULT_SOCIAL = {
+  instagram: 'https://www.instagram.com/mariemaude_eliacin/',
+  facebook: 'https://www.facebook.com/mariemaudeeliacin',
+  twitter: 'https://twitter.com/mariemaudelart',
+  email: 'mailto:contact@mariemaudeart.com',
+};
+
 const Hero: React.FC<HeroProps> = ({ setView }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [heroMeta, setHeroMeta] = useState({ title: 'Sérénité Tropicale', description: 'Huile sur Toile — 2023', label: 'Oeuvre du moment' });
+  const [socialLinks, setSocialLinks] = useState(DEFAULT_SOCIAL);
+  // paintingImageUrl is a fallback; ArtReveal loads the real image from site_content
   const paintingImageUrl = "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=1200";
 
-  // Load hero metadata
+  // Load hero metadata + social links
   useEffect(() => {
     const loadHeroMeta = async () => {
       const { data } = await supabase.from('site_content').select('content').eq('key', 'hero_image').single();
@@ -48,7 +57,24 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
         });
       }
     };
+    const loadSocialLinks = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('instagram_url, facebook_url, twitter_url, email_address')
+          .single();
+        if (data) {
+          setSocialLinks({
+            instagram: data.instagram_url || DEFAULT_SOCIAL.instagram,
+            facebook: data.facebook_url || DEFAULT_SOCIAL.facebook,
+            twitter: data.twitter_url || DEFAULT_SOCIAL.twitter,
+            email: data.email_address ? `mailto:${data.email_address}` : DEFAULT_SOCIAL.email,
+          });
+        }
+      } catch (_) { /* silently use defaults */ }
+    };
     loadHeroMeta();
+    loadSocialLinks();
   }, []);
 
   // Motion values for parallax
@@ -93,14 +119,14 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
+            <div className="space-y-1 sm:space-y-4 mb-6 sm:mb-8">
               {/* Line 1 */}
               <motion.div
                 initial={{ opacity: 0, x: -80, filter: 'blur(10px)' }}
                 animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                 transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] tracking-tight">
+                <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-black text-white leading-[0.9] sm:leading-[1.1] tracking-tight">
                   Découvrir,
                 </h1>
               </motion.div>
@@ -111,8 +137,8 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
                 animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                 transition={{ duration: 0.8, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] tracking-tight">
-                  Collectionneur
+                <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-black text-white leading-[0.9] sm:leading-[1.1] tracking-tight">
+                  Collectionner
                 </h1>
               </motion.div>
 
@@ -123,7 +149,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
                 transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="relative inline-block"
               >
-                <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-600 leading-[1.1] tracking-tight relative">
+                <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-600 leading-[0.9] sm:leading-[1.1] tracking-tight relative pb-2 sm:pb-0">
                   L'Art Rare
                 </h1>
 
@@ -203,14 +229,17 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             className="flex space-x-4 pt-6 sm:pt-8"
           >
             {[
-              { Icon: Instagram, label: 'Instagram' },
-              { Icon: Facebook, label: 'Facebook' },
-              { Icon: Twitter, label: 'Twitter' },
-              { Icon: MessageCircle, label: 'Message' }
-            ].map((social, i) => (
+              { Icon: Instagram, href: socialLinks.instagram, label: 'Instagram' },
+              { Icon: Facebook, href: socialLinks.facebook, label: 'Facebook' },
+              { Icon: Twitter, href: socialLinks.twitter, label: 'Twitter / X' },
+              { Icon: MessageCircle, href: socialLinks.email, label: 'Email' },
+            ].map(({ Icon, href, label }, i) => (
               <motion.a
-                key={i}
-                href="#"
+                key={label}
+                href={href}
+                aria-label={label}
+                target={href.startsWith('mailto') ? undefined : '_blank'}
+                rel="noreferrer noopener"
                 whileHover={{ scale: 1.2, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, y: 10 }}
@@ -218,7 +247,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
                 transition={{ delay: 0.9 + i * 0.1, duration: 0.4 }}
                 className="group w-10 xs:w-11 h-10 xs:h-11 flex items-center justify-center rounded-lg bg-gradient-to-br from-white/5 to-white/0 text-white/50 hover:text-emerald-400 border border-white/10 hover:border-emerald-500/50 transition-all backdrop-blur-sm flex-shrink-0"
               >
-                <social.Icon size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
+                <Icon size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
               </motion.a>
             ))}
           </motion.div>
@@ -261,9 +290,9 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
               transition={{ delay: 2, duration: 0.8 }}
               className="absolute -bottom-20 sm:-bottom-8 -right-4 sm:-right-8 bg-white/5 backdrop-blur-md border border-white/10 p-4 sm:p-6 rounded-2xl hidden sm:block max-w-[280px]"
             >
-              <span className="text-[10px] uppercase tracking-widest text-[#34d399] font-black mb-1 block">Oeuvre du moment</span>
-              <h4 className="text-lg sm:text-xl serif text-white">Sérénité Tropicale</h4>
-              <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Huile sur Toile — 2023</p>
+              <span className="text-[10px] uppercase tracking-widest text-[#34d399] font-black mb-1 block">{heroMeta.label}</span>
+              <h4 className="text-lg sm:text-xl serif text-white">{heroMeta.title}</h4>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{heroMeta.description}</p>
             </motion.div>
           </motion.div>
         </div>
