@@ -143,3 +143,5 @@ export const Blog: React.FC = () => {
         </section>
     );
 };
+
+export default Blog;
