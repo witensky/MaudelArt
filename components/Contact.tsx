@@ -1,92 +1,91 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Instagram, MapPin, Send, Loader2, CheckCircle } from 'lucide-react';
+import { CheckCircle, Instagram, Loader2, Mail, MapPin, Send } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
 
+type SubjectKey = 'acquisition' | 'catalog' | 'press' | 'other';
+
 const Contact: React.FC = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: 'Acquisition d\'œuvre',
-    message: ''
+    subject: 'acquisition' as SubjectKey,
+    message: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const subjectOptions = useMemo<{ key: SubjectKey; label: string }[]>(() => ([
+    { key: 'acquisition', label: t('contact.subjects.acquisition') },
+    { key: 'catalog', label: t('contact.subjects.catalog') },
+    { key: 'press', label: t('contact.subjects.press') },
+    { key: 'other', label: t('contact.subjects.other') },
+  ]), [t]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
 
+    const selectedSubject = subjectOptions.find((option) => option.key === formData.subject)?.label || t('contact.subjects.acquisition');
     const { error } = await supabase.from('messages').insert([
       {
         name: formData.name,
         email: formData.email,
-        subject: formData.subject,
-        message: formData.message
-      }
+        subject: selectedSubject,
+        message: formData.message,
+      },
     ]);
 
     if (!error) {
       setSuccess(true);
-      setFormData({ name: '', email: '', subject: 'Acquisition d\'œuvre', message: '' });
+      setFormData({ name: '', email: '', subject: 'acquisition', message: '' });
       setTimeout(() => setSuccess(false), 5000);
     } else {
-      alert("Erreur lors de l'envoi du message.");
+      alert(t('contact.error'));
     }
+
     setLoading(false);
   };
 
   return (
-    <section id="contact" className="py-32 bg-[#fcfcf9]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
-
+    <section id="contact" className="bg-[#fcfcf9] py-32">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-[#d4af37] uppercase tracking-widest text-xs md:text-sm mb-4 block font-bold">Collaboration & Acquisition</span>
-            <h2 className="text-4xl md:text-6xl serif text-emerald-950 mb-8 md:mb-12 leading-tight">
-              Entrer dans <br className="hidden md:block" />
-              l'univers
+            <span className="mb-4 block text-xs font-bold uppercase tracking-widest text-[#d4af37] md:text-sm">
+              {t('contact.titleLabel')}
+            </span>
+            <h2 className="mb-8 text-4xl leading-tight text-emerald-950 md:mb-12 md:text-6xl serif">
+              {t('contact.title')}
             </h2>
 
             <div className="space-y-10">
-              <div className="flex items-start gap-6">
-                <div className="p-3 bg-emerald-950 text-white rounded-sm">
-                  <Mail size={24} />
+              {[
+                { Icon: Mail, title: t('contact.email'), value: 'contact@mariemaudeart.com' },
+                { Icon: Instagram, title: 'Instagram', value: '@mariemaude_eliacin' },
+                { Icon: MapPin, title: t('contact.workshop'), value: 'Montreal, QC | Port-au-Prince, Haiti' },
+              ].map(({ Icon, title, value }) => (
+                <div key={title} className="flex items-start gap-6">
+                  <div className="rounded-sm bg-emerald-950 p-3 text-white">
+                    <Icon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="mb-1 text-xs font-bold uppercase tracking-widest text-emerald-950">{title}</h4>
+                    <p className="font-medium text-emerald-800/70">{value}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-emerald-950 uppercase tracking-widest text-xs mb-1">Email</h4>
-                  <p className="text-emerald-800/70 font-medium">contact@mariemaudeart.com</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-6">
-                <div className="p-3 bg-emerald-950 text-white rounded-sm">
-                  <Instagram size={24} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-emerald-950 uppercase tracking-widest text-xs mb-1">Instagram</h4>
-                  <p className="text-emerald-800/70 font-medium">@mariemaude_eliacin</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-6">
-                <div className="p-3 bg-emerald-950 text-white rounded-sm">
-                  <MapPin size={24} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-emerald-950 uppercase tracking-widest text-xs mb-1">Atelier</h4>
-                  <p className="text-emerald-800/70 font-medium">Montréal, QC | Port-au-Prince, Haïti</p>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="mt-16 p-8 bg-[#f5f5f0] border-l-4 border-[#d4af37]">
-              <p className="italic text-emerald-900 serif text-lg leading-relaxed">
-                "C'est un honneur de partager mon voyage avec vous. Pour toute demande d'acquisition ou de projet spécial, n'hésitez pas à me contacter."
+            <div className="mt-16 border-l-4 border-[#d4af37] bg-[#f5f5f0] p-8">
+              <p className="text-lg italic leading-relaxed text-emerald-900 serif">
+                {t('contact.quote')}
               </p>
             </div>
           </motion.div>
@@ -95,87 +94,101 @@ const Contact: React.FC = () => {
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="space-y-8 bg-white p-6 md:p-12 shadow-[0_40px_100px_-20px_rgba(6,78,59,0.15)] rounded-2xl border border-emerald-900/5 relative overflow-hidden contact-form"
             onSubmit={handleSubmit}
+            className="contact-form relative space-y-8 overflow-hidden rounded-2xl border border-emerald-900/5 bg-white p-6 shadow-[0_40px_100px_-20px_rgba(6,78,59,0.15)] md:p-12"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">Nom complet</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">
+                  {t('contact.fullName')}
+                </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Jean Dupont"
+                  onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+                  placeholder={t('contact.fullNamePlaceholder')}
                   required
-                  className="w-full bg-emerald-50/30 border border-emerald-950/10 rounded-xl py-4 px-5 text-emerald-950 placeholder-emerald-900/30 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all font-medium"
+                  className="w-full rounded-xl border border-emerald-950/10 bg-emerald-50/30 px-5 py-4 font-medium text-emerald-950 outline-none transition-all placeholder:text-emerald-900/30 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5"
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">Email</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">
+                  {t('contact.email')}
+                </label>
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="votre@email.com"
+                  onChange={(event) => setFormData({ ...formData, email: event.target.value })}
+                  placeholder={t('contact.emailPlaceholder')}
                   required
-                  className="w-full bg-emerald-50/30 border border-emerald-950/10 rounded-xl py-4 px-5 text-emerald-950 placeholder-emerald-900/30 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all font-medium"
+                  className="w-full rounded-xl border border-emerald-950/10 bg-emerald-50/30 px-5 py-4 font-medium text-emerald-950 outline-none transition-all placeholder:text-emerald-900/30 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5"
                 />
               </div>
             </div>
+
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">Sujet de la demande</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">
+                {t('contact.subject')}
+              </label>
               <select
                 value={formData.subject}
-                onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                className="w-full bg-emerald-50/30 border border-emerald-950/10 rounded-xl py-4 px-5 text-emerald-950 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all font-medium appearance-none"
+                onChange={(event) => setFormData({ ...formData, subject: event.target.value as SubjectKey })}
+                className="w-full appearance-none rounded-xl border border-emerald-950/10 bg-emerald-50/30 px-5 py-4 font-medium text-emerald-950 outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5"
               >
-                <option>Acquisition d'œuvre</option>
-                <option>Demande de catalogue</option>
-                <option>Presse / Collaboration</option>
-                <option>Autre</option>
+                {subjectOptions.map((option) => (
+                  <option key={option.key} value={option.key}>{option.label}</option>
+                ))}
               </select>
             </div>
+
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">Votre Message</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40">
+                {t('contact.message')}
+              </label>
               <textarea
                 rows={5}
                 value={formData.message}
-                onChange={e => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Comment pouvons-nous vous aider ?"
+                onChange={(event) => setFormData({ ...formData, message: event.target.value })}
+                placeholder={t('contact.messagePlaceholder')}
                 required
-                className="w-full bg-emerald-50/30 border border-emerald-950/10 rounded-xl py-4 px-5 text-emerald-950 placeholder-emerald-900/30 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all resize-none font-medium"
-              ></textarea>
+                className="w-full resize-none rounded-xl border border-emerald-950/10 bg-emerald-50/30 px-5 py-4 font-medium text-emerald-950 outline-none transition-all placeholder:text-emerald-900/30 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-5 bg-emerald-950 text-[#d4af37] font-black uppercase tracking-[0.3em] text-xs rounded-xl flex items-center justify-center gap-3 hover:bg-emerald-900 hover:scale-[1.01] active:scale-[0.98] transition-all shadow-xl shadow-emerald-950/20 group disabled:opacity-70 disabled:cursor-not-allowed"
+              className="group flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-950 py-5 text-xs font-black uppercase tracking-[0.3em] text-[#d4af37] shadow-xl shadow-emerald-950/20 transition-all hover:scale-[1.01] hover:bg-emerald-900 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
-              {loading ? 'Envoi...' : 'Envoyer le message'}
+              {loading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Send size={16} className="transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+              )}
+              {loading ? t('contact.sending') : t('contact.send')}
             </button>
 
             {success && (
-              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-8 z-20">
-                <CheckCircle size={64} className="text-emerald-500 mb-4" />
-                <h3 className="text-2xl serif text-emerald-950 mb-2">Message Envoyé !</h3>
-                <p className="text-emerald-800/60">Nous vous répondrons dans les plus brefs délais.</p>
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 p-8 text-center backdrop-blur-sm">
+                <CheckCircle size={64} className="mb-4 text-emerald-500" />
+                <h3 className="mb-2 text-2xl text-emerald-950 serif">{t('contact.sentTitle')}</h3>
+                <p className="text-emerald-800/60">{t('contact.sentDescription')}</p>
               </div>
             )}
           </motion.form>
-
         </div>
       </div>
 
-      <footer className="mt-32 pt-16 border-t border-emerald-900/5 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-bold tracking-[0.3em] text-emerald-950/40 uppercase">
-          <div>© 2024 Marie Maude Eliacin — MaudelArt</div>
+      <footer className="mt-32 border-t border-emerald-900/5 px-6 pt-16">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-950/40 md:flex-row">
+          <div>{t('home.copyright')}</div>
           <div className="flex space-x-8">
-            <a href="#" className="hover:text-emerald-600 transition-colors">Mentions Légales</a>
-            <a href="#" className="hover:text-emerald-600 transition-colors">Confidentialité</a>
+            <a href="#" className="transition-colors hover:text-emerald-600">{t('common.legal')}</a>
+            <a href="#" className="transition-colors hover:text-emerald-600">{t('common.privacy')}</a>
           </div>
-          <div className="serif italic text-emerald-950 normal-case tracking-normal text-sm lowercase">La beauté sauvera le monde.</div>
+          <div className="text-sm lowercase tracking-normal text-emerald-950 italic normal-case serif">
+            {t('common.beauty')}
+          </div>
         </div>
       </footer>
     </section>

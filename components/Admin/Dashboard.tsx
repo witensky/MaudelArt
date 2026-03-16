@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import {
-    LayoutDashboard, Image as ImageIcon, Palette, Mail, TrendingUp, Users, Clock
+    LayoutDashboard, Image as ImageIcon, Palette, Mail, TrendingUp
 } from 'lucide-react';
+import { MonthlyStatsCard } from './MonthlyStatsCard';
 
 // Managers
 import { ArtworksManager } from './ArtworksManager';
@@ -73,19 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-black/5">
-                            <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-xl font-bold text-emerald-950 flex items-center gap-3">
-                                    <TrendingUp className="text-emerald-500" size={24} /> Statistiques du Mois
-                                </h3>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40">Janvier 2024</span>
-                            </div>
-                            <div className="space-y-6">
-                                <ActivityItem icon={Users} label="Visites uniques" val="1,240" color="bg-emerald-50 text-emerald-600" />
-                                <ActivityItem icon={ImageIcon} label="Vues des œuvres" val="4,892" color="bg-blue-50 text-blue-600" />
-                                <ActivityItem icon={Clock} label="Temps moyen" val="4m 12s" color="bg-purple-50 text-purple-600" />
-                            </div>
-                        </div>
+                        <MonthlyStatsCard />
 
                         <div className="bg-[#041a14] p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col justify-center">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full" />
@@ -139,18 +128,6 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: any) => (
                 <span className="text-[10px] font-bold text-emerald-500">{trend}</span>
             </div>
         </div>
-    </div>
-);
-
-const ActivityItem = ({ icon: Icon, label, val, color }: any) => (
-    <div className="flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-black/5 group">
-        <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-                <Icon size={18} />
-            </div>
-            <span className="text-sm font-bold text-emerald-950/80">{label}</span>
-        </div>
-        <span className="text-lg font-black text-emerald-950">{val}</span>
     </div>
 );
 

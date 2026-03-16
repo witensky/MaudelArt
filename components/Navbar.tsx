@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react';
 import { View } from '../App';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
 
 interface NavbarProps {
@@ -12,15 +13,10 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) => {
+  const { language, setLanguage, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsProfileOpen(false);
-    setView('home');
-  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -28,40 +24,61 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks: { name: string; id: View }[] = [
-    { name: 'Accueil', id: 'home' },
-    { name: 'Galerie', id: 'gallery' },
-    { name: 'Artistes', id: 'artists' },
-    { name: 'À propos', id: 'bio' },
-    { name: 'Contact', id: 'contact' },
-  ];
-
-  const handleNavClick = (id: View) => {
-    setView(id);
+  const handleNavClick = (view: View) => {
+    setView(view);
     setIsMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsProfileOpen(false);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsProfileOpen(false);
+    handleNavClick('home');
+  };
+
+  const navLinks: { name: string; id: View }[] = [
+    { name: t('nav.home'), id: 'home' },
+    { name: t('nav.gallery'), id: 'gallery' },
+    { name: t('nav.artists'), id: 'artists' },
+    { name: t('nav.about'), id: 'bio' },
+    { name: t('nav.contact'), id: 'contact' },
+  ];
+
+  const languageSwitcher = (
+    <div className="flex items-center rounded-full border border-black/10 bg-gray-100/80 p-1">
+      <button
+        onClick={() => setLanguage('fr')}
+        className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${language === 'fr' ? 'bg-white text-maudel-dark shadow-sm' : 'text-gray-500 hover:text-maudel-dark'}`}
+        aria-label={t('language.french')}
+      >
+        {t('language.shortFrench')}
+      </button>
+      <button
+        onClick={() => setLanguage('en')}
+        className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${language === 'en' ? 'bg-white text-maudel-dark shadow-sm' : 'text-gray-500 hover:text-maudel-dark'}`}
+        aria-label={t('language.english')}
+      >
+        {t('language.shortEnglish')}
+      </button>
+    </div>
+  );
+
   return (
-    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white'
-      } h-14 md:h-[60px]`}>
-      <div className="w-full h-full px-4 sm:px-6 lg:px-8 flex justify-between items-center max-w-full">
-        {/* Logo - Optimized for mobile */}
+    <nav className={`fixed left-0 top-0 z-[100] h-14 w-full transition-all duration-300 md:h-[60px] ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
+      <div className="grid h-full w-full max-w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:gap-8 lg:px-8">
         <button
           onClick={() => handleNavClick('home')}
-          className="font-serif text-base sm:text-lg md:text-xl font-bold text-gray-900 hover:opacity-70 transition-opacity flex-shrink-0 whitespace-nowrap py-2"
+          className="whitespace-nowrap py-2 text-base font-bold text-gray-900 transition-opacity hover:opacity-70 sm:text-lg md:text-xl font-serif"
         >
           MAUDELART
         </button>
 
-        {/* Desktop Menu */}
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6 lg:gap-8">
+        <div className="hidden min-w-0 items-center justify-center gap-8 md:flex lg:gap-12 xl:gap-16">
           {navLinks.map((link) => (
             <motion.button
               key={link.id}
               onClick={() => handleNavClick(link.id)}
-              className={`text-xs lg:text-sm font-medium transition-colors whitespace-nowrap py-2 relative ${currentView === link.id ? 'text-maudel-dark font-bold' : 'text-gray-600 hover:text-maudel-dark'}`}
+              className={`relative whitespace-nowrap py-2 text-xs font-medium transition-colors lg:text-sm ${currentView === link.id ? 'font-bold text-maudel-dark' : 'text-gray-600 hover:text-maudel-dark'}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -69,53 +86,49 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
               {currentView === link.id && (
                 <motion.div
                   layoutId="underline"
-                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-gold rounded-full"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gold"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
             </motion.button>
           ))}
         </div>
 
-        {/* Right Actions */}
-        <div className="hidden md:flex items-center gap-2 lg:gap-4">
+        <div className="hidden items-center gap-2 md:flex lg:gap-4">
+          {languageSwitcher}
+
           {user ? (
             <div className="relative">
               <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 h-10 w-10 flex items-center justify-center"
-                aria-label="Menu Profil"
+                onClick={() => setIsProfileOpen((value) => !value)}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg p-2 transition-colors hover:bg-gray-100"
+                aria-label={t('nav.profileMenu')}
               >
                 <User size={18} className="text-gray-700" />
               </button>
+
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
                   <button
-                    onClick={() => {
-                      handleNavClick('profile');
-                      setIsProfileOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 text-sm"
+                    onClick={() => handleNavClick('profile')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    Mon Profil
+                    {t('nav.profile')}
                   </button>
                   {isAdmin && (
                     <button
-                      onClick={() => {
-                        handleNavClick('admin');
-                        setIsProfileOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                      onClick={() => handleNavClick('admin')}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      <LayoutDashboard size={14} /> Admin
+                      <LayoutDashboard size={14} /> {t('nav.admin')}
                     </button>
                   )}
                   <hr className="my-2" />
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50"
                   >
-                    <LogOut size={14} /> Déconnexion
+                    <LogOut size={14} /> {t('nav.logout')}
                   </button>
                 </div>
               )}
@@ -123,82 +136,79 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
           ) : (
             <button
               onClick={() => handleNavClick('auth')}
-              className="px-4 lg:px-6 py-2 bg-green-700 text-white rounded-lg text-xs lg:text-sm font-medium hover:bg-green-800 transition-colors flex-shrink-0"
+              className="flex-shrink-0 rounded-lg bg-green-700 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-green-800 lg:px-6 lg:text-sm"
             >
-              Connexion
+              {t('nav.login')}
             </button>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden p-2 text-gray-700 flex-shrink-0 hover:bg-gray-100 rounded-lg transition-colors h-10 w-10 flex items-center justify-center"
-          aria-label="Menu"
+          onClick={() => setIsMenuOpen((value) => !value)}
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+          aria-label={t('nav.menu')}
           aria-expanded={isMenuOpen}
         >
           {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      {/* Mobile Menu - Optimized spacing and layout */}
       {isMenuOpen && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-1 max-w-full overflow-y-auto absolute w-full shadow-xl"
+          className="absolute w-full max-w-full overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 shadow-xl md:hidden"
           style={{ maxHeight: 'calc(100vh - 56px)' }}
         >
+          <div className="mb-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              {t('language.label')}
+            </span>
+            {languageSwitcher}
+          </div>
+
           <div className="flex flex-col gap-0">
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className="text-gray-700 text-sm font-medium text-left hover:text-gray-900 hover:bg-gray-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center"
+                className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 {link.name}
               </button>
             ))}
 
-            {user && (
+            {user ? (
               <>
                 <hr className="my-2" />
                 <button
-                  onClick={() => {
-                    handleNavClick('profile');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-gray-700 text-sm font-medium text-left hover:text-gray-900 hover:bg-gray-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center"
+                  onClick={() => handleNavClick('profile')}
+                  className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
                 >
-                  Mon Profil
+                  {t('nav.profile')}
                 </button>
                 {isAdmin && (
                   <button
-                    onClick={() => {
-                      handleNavClick('admin');
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-gray-700 text-sm font-medium text-left hover:text-gray-900 hover:bg-gray-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center gap-2"
+                    onClick={() => handleNavClick('admin')}
+                    className="flex h-[44px] w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
                   >
-                    <LayoutDashboard size={16} /> Admin
+                    <LayoutDashboard size={16} /> {t('nav.admin')}
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="text-red-600 text-sm font-medium text-left hover:bg-red-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center gap-2"
+                  className="flex h-[44px] w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                 >
-                  <LogOut size={16} /> Déconnexion
+                  <LogOut size={16} /> {t('nav.logout')}
                 </button>
               </>
-            )}
-
-            {!user && (
+            ) : (
               <button
                 onClick={() => handleNavClick('auth')}
-                className="w-full px-4 py-3 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors mt-3 h-[44px] flex items-center justify-center"
+                className="mt-3 flex h-[44px] w-full items-center justify-center rounded-lg bg-green-700 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-green-800"
               >
-                Connexion
+                {t('nav.login')}
               </button>
             )}
           </div>

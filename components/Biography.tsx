@@ -1,143 +1,194 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Quote, Piano, Scissors, Palette, Loader2 } from 'lucide-react';
+import { Loader2, Palette, Piano, Quote, Scissors } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+type LocalizedText = string | { fr?: string; en?: string };
+
 interface Chapter {
   id: number;
-  title: string;
+  title: LocalizedText;
   icon: 'Scissors' | 'Palette' | 'Piano';
-  period?: string;
-  periodLabel?: string;
-  text: string;
+  period?: LocalizedText;
+  text: LocalizedText;
 }
 
 interface Exhibition {
   year: string;
-  title: string;
-  location: string;
+  title: LocalizedText;
+  location: LocalizedText;
 }
 
 interface BioContent {
-  mainTitle: string;
-  subtitle: string;
-  quote: string;
-  quoteAuthor?: string;
-  secondaryQuote?: string;
-  secondaryQuoteAuthor?: string;
+  mainTitle: LocalizedText;
+  subtitle: LocalizedText;
+  quote: LocalizedText;
+  quoteAuthor?: LocalizedText;
+  secondaryQuote?: LocalizedText;
+  secondaryQuoteAuthor?: LocalizedText;
   chapters: Chapter[];
   exhibitions: Exhibition[];
   photoUrl?: string;
-  finalStatement?: string;
+  finalStatement?: LocalizedText;
 }
 
-// ─── Fallback content (hardcoded) ─────────────────────────────────────────────
 const FALLBACK: BioContent = {
   mainTitle: 'Marie Maude Eliacin',
-  subtitle: 'Artist Narrative',
-  quote: "My painting is a journey of self-discovery, with emotions stored in me for many years which were just waiting to come out to bring a little light where it is lacking.",
+  subtitle: { fr: 'Recit artistique', en: 'Artist narrative' },
+  quote: {
+    fr: "Ma peinture est un voyage interieur, fait d'emotions longtemps conservees qui attendaient simplement de sortir pour apporter un peu de lumiere la ou elle manque.",
+    en: 'My painting is a journey of self-discovery, with emotions stored in me for many years that were simply waiting to emerge and bring a little light where it is lacking.',
+  },
   quoteAuthor: 'Marie Maude Eliacin',
-  secondaryQuote: "Maude Eliacin's pictorial universe has no room for gloom. They are brightly hued colors that express vitality, bliss, delights. Maud draws a more cheerful world, a nature where life is good.",
-  secondaryQuoteAuthor: '— Soucaneau Gabriel, Raj Magazine (2007)',
+  secondaryQuote: {
+    fr: "L'univers pictural de Maude Eliacin n'a pas de place pour la morosite. Les couleurs lumineuses y expriment vitalite, joie et delice. Maude dessine un monde plus joyeux, une nature ou il fait bon vivre.",
+    en: "Maude Eliacin's pictorial universe has no room for gloom. Brightly hued colors express vitality, bliss, and delight. Maude sketches a more cheerful world, a nature where life feels good.",
+  },
+  secondaryQuoteAuthor: {
+    fr: '- Soucaneau Gabriel, Raj Magazine (2007)',
+    en: '- Soucaneau Gabriel, Raj Magazine (2007)',
+  },
   chapters: [
     {
       id: 1,
-      title: 'Precision in Every Thread',
+      title: { fr: 'La precision dans chaque geste', en: 'Precision in Every Gesture' },
       icon: 'Scissors',
-      period: '2003 Transition',
-      periodLabel: '2003',
-      text: "A career seamstress known for her meticulous attention to detail and perfectionism, Marie Maude Eliacin transitioned into the visual arts after her early retirement in 2003. A lifelong pianist, she found it difficult to continue with the instrument due to frequent travel and sought a new creative outlet. At the suggestion of a friend, she visited a visual arts workshop without much initial enthusiasm."
+      period: { fr: 'Transition 2003', en: '2003 Transition' },
+      text: {
+        fr: "Couturiere reconnue pour sa minutie et son perfectionnisme, Marie Maude Eliacin se tourne vers les arts visuels apres une retraite anticipee en 2003. Pianiste passionnee, elle cherchait alors un nouvel espace de creation adapte a son rythme de vie.",
+        en: 'Known as a seamstress for her meticulous attention to detail and perfectionism, Marie Maude Eliacin turned to the visual arts after an early retirement in 2003. A lifelong pianist, she was looking for a new creative outlet that fit her rhythm of life.',
+      },
     },
     {
       id: 2,
-      title: 'From Piano Keys to Pencils',
+      title: { fr: 'Du piano au chevalet', en: 'From Piano to Easel' },
       icon: 'Palette',
-      period: 'The Encounter',
-      text: "That changed after a very fortunate encounter with Professor René Cangé, who introduced her to easel art, acrylics, and ultimately oil painting—a medium she quickly embraced. Maude began formal painting classes at the end of 2003 and quickly immersed herself in exploring a range of subjects, including nature, seascapes, portraits, and still lifes."
+      period: { fr: 'La rencontre', en: 'The encounter' },
+      text: {
+        fr: "Sa rencontre avec le professeur Rene Cange marque un tournant decisif. Il l'introduit au dessin, a l'acrylique puis a l'huile, un medium qu'elle adopte rapidement avec enthousiasme.",
+        en: 'Her encounter with Professor Rene Cange became a decisive turning point. He introduced her to drawing, acrylics, and ultimately oil painting, a medium she quickly embraced with enthusiasm.',
+      },
     },
     {
       id: 3,
-      title: 'Order and Fantasy',
+      title: { fr: 'Ordre et fantaisie', en: 'Order and Fantasy' },
       icon: 'Palette',
-      period: 'Mastery',
-      text: "She later deepened her technique under the guidance of the late Professor Franck Louissaint, whose mentorship helped refine her oil painting practice even more. In December 2015, Maud held her second exhibition, Order and Fantasy, at her daughter's private residence in Pétion-Ville, Haiti."
+      period: { fr: 'Maitrise', en: 'Mastery' },
+      text: {
+        fr: "Par la suite, l'enseignement du professeur Franck Louissaint approfondit encore sa technique. En decembre 2015, elle presente sa deuxieme exposition, Ordre et Fantaisie, dans la residence privee de sa fille a Petion-Ville.",
+        en: 'Later, the guidance of Professor Franck Louissaint further deepened her technique. In December 2015, she presented her second exhibition, Order and Fantasy, at her daughter\'s private residence in Petion-Ville.',
+      },
     },
     {
       id: 4,
-      title: 'A Continuous Journey',
+      title: { fr: 'Un chemin toujours vivant', en: 'A Journey Still in Motion' },
       icon: 'Palette',
-      period: 'Present',
-      text: "Though her travel schedule and personal constraints have limited her participation in further exhibitions, Maud continues to paint privately. She particularly enjoys working with charcoal and oil, mediums that allow her to pursue her passion for detail and expressive realism."
-    }
+      period: { fr: 'Aujourd\'hui', en: 'Today' },
+      text: {
+        fr: "Malgre les contraintes personnelles et les voyages, Maude poursuit sa pratique dans l'intimite de l'atelier. Elle y cultive un realisme expressif nourri par le fusain, l'huile et le gout du detail.",
+        en: 'Despite personal constraints and travel, Maude continues her practice in the intimacy of the studio. There she cultivates an expressive realism shaped by charcoal, oil, and a love of detail.',
+      },
+    },
   ],
   exhibitions: [
-    { year: '2015', title: 'Order and Fantasy', location: 'Private Residence, Pétion-Ville, Haiti' },
-    { year: '2007', title: 'International Caribbean Art Fair (ICA)', location: 'New York, USA' },
-    { year: '2007', title: 'Art and Spectacle', location: 'Festival Arts, Pétion Ville, Haiti' },
-    { year: '2007', title: 'Open-Air Creations', location: 'Kenscoff, Haiti' }
+    {
+      year: '2015',
+      title: { fr: 'Ordre et Fantaisie', en: 'Order and Fantasy' },
+      location: { fr: 'Residence privee, Petion-Ville, Haiti', en: 'Private residence, Petion-Ville, Haiti' },
+    },
+    {
+      year: '2007',
+      title: { fr: 'Foire internationale d\'art caribeen (ICA)', en: 'International Caribbean Art Fair (ICA)' },
+      location: { fr: 'New York, Etats-Unis', en: 'New York, USA' },
+    },
+    {
+      year: '2007',
+      title: { fr: 'Art et Spectacle', en: 'Art and Spectacle' },
+      location: { fr: 'Festival Arts, Petion-Ville, Haiti', en: 'Festival Arts, Petion-Ville, Haiti' },
+    },
+    {
+      year: '2007',
+      title: { fr: 'Creations en plein air', en: 'Open-Air Creations' },
+      location: { fr: 'Kenscoff, Haiti', en: 'Kenscoff, Haiti' },
+    },
   ],
   photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800',
-  finalStatement: "Today, she invites you to admire some of her old and recent works through her painting, which is a journey of self-discovery, with emotions stored in her for many years and which were just waiting to come out to bring a little light where it is lacking."
+  finalStatement: {
+    fr: "Aujourd'hui, elle vous invite a decouvrir ses oeuvres anciennes et recentes, fruits d'un voyage interieur qui continue d'apporter de la lumiere la ou elle fait defaut.",
+    en: 'Today, she invites you to discover her older and recent works, the result of an inner journey that continues to bring light where it is needed.',
+  },
 };
 
-const ICONS: Record<string, React.FC<{ size?: number }>> = {
-  Scissors: ({ size }) => <Scissors size={size} />,
-  Palette: ({ size }) => <Palette size={size} />,
-  Piano: ({ size }) => <Piano size={size} />,
+const ICONS: Record<string, React.FC<{ size?: number; className?: string }>> = {
+  Scissors: ({ size, className }) => <Scissors size={size} className={className} />,
+  Palette: ({ size, className }) => <Palette size={size} className={className} />,
+  Piano: ({ size, className }) => <Piano size={size} className={className} />,
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 const Biography: React.FC = () => {
-  const [bio, setBio] = useState<BioContent>(FALLBACK);
+  const { t, getLocalizedValue } = useLanguage();
+  const [remoteBio, setRemoteBio] = useState<Partial<BioContent> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    const loadBiography = async () => {
       const { data } = await supabase.from('site_content').select('content').eq('key', 'biography').single();
+
       if (data?.content) {
-        setBio({ ...FALLBACK, ...(data.content as BioContent) });
+        setRemoteBio(data.content as Partial<BioContent>);
       }
+
       setLoading(false);
     };
-    load();
+
+    loadBiography();
   }, []);
+
+  const bio = useMemo<BioContent>(() => ({
+    ...FALLBACK,
+    ...remoteBio,
+    chapters: (remoteBio?.chapters as Chapter[]) || FALLBACK.chapters,
+    exhibitions: (remoteBio?.exhibitions as Exhibition[]) || FALLBACK.exhibitions,
+  }), [remoteBio]);
 
   if (loading) {
     return (
-      <section className="min-h-screen bg-emerald-950 flex items-center justify-center">
+      <section className="flex min-h-screen items-center justify-center bg-emerald-950">
         <Loader2 className="animate-spin text-[#d4af37]" size={32} />
       </section>
     );
   }
 
-  return (
-    <section id="bio" className="pt-40 pb-32 bg-emerald-950 text-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-6">
+  const mainTitle = getLocalizedValue(bio.mainTitle, 'Marie Maude Eliacin');
+  const titleParts = mainTitle.split(' ');
 
-        {/* Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-40">
+  return (
+    <section id="bio" className="min-h-screen bg-emerald-950 pb-32 pt-40 text-white">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-40 grid grid-cols-1 items-center gap-20 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1 }}
             className="relative"
           >
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#d4af37]/10 blur-3xl rounded-full" />
-            <span className="text-[#d4af37] uppercase tracking-[0.4em] text-xs font-bold mb-6 block">
-              {bio.subtitle}
+            <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#d4af37]/10 blur-3xl" />
+            <span className="mb-6 block text-xs font-bold uppercase tracking-[0.4em] text-[#d4af37]">
+              {getLocalizedValue(bio.subtitle)}
             </span>
-            <h2 className="text-6xl md:text-8xl serif leading-tight mb-8">
-              {bio.mainTitle.split(' ').slice(0, -1).join(' ')} <br />
-              {bio.mainTitle.split(' ').slice(-1)}
+            <h2 className="mb-8 text-6xl leading-tight md:text-8xl serif">
+              {titleParts.slice(0, -1).join(' ')} <br />
+              {titleParts.slice(-1)}
             </h2>
-            <div className="h-1 w-24 bg-[#d4af37] mb-10" />
-            <p className="text-xl text-white/60 leading-relaxed italic serif max-w-lg">
-              "{bio.quote}"
+            <div className="mb-10 h-1 w-24 bg-[#d4af37]" />
+            <p className="max-w-lg text-xl italic leading-relaxed text-white/60 serif">
+              "{getLocalizedValue(bio.quote)}"
             </p>
             {bio.quoteAuthor && (
-              <p className="text-xs text-[#d4af37] uppercase tracking-widest mt-4 font-bold">— {bio.quoteAuthor}</p>
+              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[#d4af37]">
+                - {getLocalizedValue(bio.quoteAuthor)}
+              </p>
             )}
           </motion.div>
 
@@ -145,100 +196,105 @@ const Biography: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2 }}
-            className="relative group"
+            className="group relative"
           >
-            <div className="absolute -inset-4 border border-[#d4af37]/30 rounded-sm -z-10 translate-x-4 translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-700" />
+            <div className="absolute -inset-4 -z-10 translate-x-4 translate-y-4 rounded-sm border border-[#d4af37]/30 transition-transform duration-700 group-hover:translate-x-0 group-hover:translate-y-0" />
             <div className="aspect-[4/5] overflow-hidden shadow-2xl">
               <img
                 src={bio.photoUrl || FALLBACK.photoUrl}
-                alt={bio.mainTitle}
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s]"
+                alt={mainTitle}
+                className="h-full w-full object-cover grayscale transition-all duration-[2s] group-hover:grayscale-0"
               />
             </div>
           </motion.div>
         </div>
 
-        {/* Chapters + Timeline */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-40">
-          <div className="lg:col-span-8 space-y-24 text-lg text-white/70 font-light leading-relaxed">
-            {bio.chapters.map((chapter, i) => {
+        <div className="mb-40 grid grid-cols-1 gap-16 lg:grid-cols-12">
+          <div className="space-y-24 text-lg font-light leading-relaxed text-white/70 lg:col-span-8">
+            {bio.chapters.map((chapter, index) => {
               const Icon = ICONS[chapter.icon] || ICONS.Palette;
+
               return (
                 <motion.div
                   key={chapter.id}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: index * 0.05 }}
                   className="space-y-8"
                 >
                   {chapter.period && (
                     <div className="flex items-center gap-4 text-[#d4af37]">
                       <Icon size={20} />
                       <span className="h-px w-12 bg-[#d4af37]/30" />
-                      <span className="uppercase tracking-widest text-xs font-bold">{chapter.period}</span>
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        {getLocalizedValue(chapter.period)}
+                      </span>
                     </div>
                   )}
-                  <h3 className="text-4xl serif text-white">{chapter.title}</h3>
-                  <p>{chapter.text}</p>
+                  <h3 className="text-4xl text-white serif">{getLocalizedValue(chapter.title)}</h3>
+                  <p>{getLocalizedValue(chapter.text)}</p>
                 </motion.div>
               );
             })}
 
-            {/* Secondary quote */}
             {bio.secondaryQuote && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="bg-white/5 p-12 border-l-4 border-[#d4af37] relative"
+                className="relative border-l-4 border-[#d4af37] bg-white/5 p-12"
               >
-                <Quote className="absolute top-8 right-8 text-[#d4af37]/20" size={64} />
-                <p className="text-2xl serif italic text-white/90 mb-6 leading-relaxed">
-                  "{bio.secondaryQuote}"
+                <Quote className="absolute right-8 top-8 text-[#d4af37]/20" size={64} />
+                <p className="mb-6 text-2xl italic leading-relaxed text-white/90 serif">
+                  "{getLocalizedValue(bio.secondaryQuote)}"
                 </p>
                 {bio.secondaryQuoteAuthor && (
-                  <cite className="text-[#d4af37] uppercase tracking-widest text-xs font-bold not-italic">
-                    {bio.secondaryQuoteAuthor}
+                  <cite className="text-xs font-bold uppercase tracking-widest text-[#d4af37] not-italic">
+                    {getLocalizedValue(bio.secondaryQuoteAuthor)}
                   </cite>
                 )}
               </motion.div>
             )}
           </div>
 
-          {/* Timeline sidebar */}
           <div className="lg:col-span-4 lg:pl-10">
             <div className="sticky top-40 space-y-12">
-              <h4 className="text-xs uppercase tracking-[0.4em] text-[#d4af37] font-bold border-b border-white/10 pb-6">
-                Exhibition Highlights
+              <h4 className="border-b border-white/10 pb-6 text-xs font-bold uppercase tracking-[0.4em] text-[#d4af37]">
+                {t('biography.timelineTitle')}
               </h4>
-              <div className="space-y-12 relative">
+              <div className="relative space-y-12">
                 <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
-                {bio.exhibitions.map((ex, i) => (
+                {bio.exhibitions.map((exhibition, index) => (
                   <motion.div
-                    key={i}
+                    key={`${exhibition.year}-${index}`}
                     initial={{ opacity: 0, x: 20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="relative pl-10 group"
+                    transition={{ delay: index * 0.1 }}
+                    className="group relative pl-10"
                   >
-                    <div className="absolute left-[-4.5px] top-2 w-2 h-2 rounded-full bg-[#d4af37] group-hover:scale-150 transition-transform shadow-[0_0_10px_#d4af37]" />
-                    <span className="serif text-2xl text-[#d4af37]/60 block mb-1 group-hover:text-[#d4af37] transition-colors">{ex.year}</span>
-                    <p className="text-lg font-semibold text-white group-hover:translate-x-1 transition-transform">{ex.title}</p>
-                    <p className="text-xs text-white/40 uppercase tracking-widest mt-1 leading-relaxed">{ex.location}</p>
+                    <div className="absolute left-[-4.5px] top-2 h-2 w-2 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37] transition-transform group-hover:scale-150" />
+                    <span className="mb-1 block text-2xl text-[#d4af37]/60 transition-colors group-hover:text-[#d4af37] serif">
+                      {exhibition.year}
+                    </span>
+                    <p className="text-lg font-semibold text-white transition-transform group-hover:translate-x-1">
+                      {getLocalizedValue(exhibition.title)}
+                    </p>
+                    <p className="mt-1 text-xs uppercase leading-relaxed tracking-widest text-white/40">
+                      {getLocalizedValue(exhibition.location)}
+                    </p>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Icon badges */}
               <div className="grid grid-cols-3 gap-4 pt-10">
                 {[
-                  { Icon: Scissors, label: 'Precision' },
-                  { Icon: Piano, label: 'Harmony' },
-                  { Icon: Palette, label: 'Colors' },
+                  { Icon: Scissors, label: t('biography.precision') },
+                  { Icon: Piano, label: t('biography.harmony') },
+                  { Icon: Palette, label: t('biography.colors') },
                 ].map(({ Icon, label }) => (
-                  <div key={label} className="p-4 bg-white/5 rounded-sm flex flex-col items-center gap-2">
+                  <div key={label} className="flex flex-col items-center gap-2 rounded-sm bg-white/5 p-4">
                     <Icon size={20} className="text-[#d4af37]/60" />
                     <span className="text-[8px] uppercase tracking-widest opacity-40">{label}</span>
                   </div>
@@ -248,20 +304,22 @@ const Biography: React.FC = () => {
           </div>
         </div>
 
-        {/* Final CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center max-w-4xl mx-auto py-24 border-t border-white/5"
+          className="mx-auto max-w-4xl border-t border-white/5 py-24 text-center"
         >
-          <h3 className="text-4xl serif mb-12">Bringing Light to the Lack</h3>
-          <p className="text-xl text-white/60 mb-12 leading-relaxed">
-            {bio.finalStatement || FALLBACK.finalStatement}
+          <h3 className="mb-12 text-4xl serif">{t('biography.closingTitle')}</h3>
+          <p className="mb-12 text-xl leading-relaxed text-white/60">
+            {getLocalizedValue(bio.finalStatement)}
           </p>
           <div className="flex justify-center gap-8">
-            <a href="#gallery" className="inline-block px-12 py-5 bg-[#d4af37] text-emerald-950 font-bold uppercase tracking-[0.3em] text-xs hover:bg-white transition-all shadow-2xl">
-              Explore the Works
+            <a
+              href="#gallery"
+              className="inline-block bg-[#d4af37] px-12 py-5 text-xs font-bold uppercase tracking-[0.3em] text-emerald-950 shadow-2xl transition-all hover:bg-white"
+            >
+              {t('biography.exploreWorks')}
             </a>
           </div>
         </motion.div>
