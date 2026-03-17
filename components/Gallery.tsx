@@ -7,6 +7,7 @@ import { AUTHORS as STATIC_AUTHORS } from '../constants';
 import { supabase } from '../supabaseClient';
 import { Artwork } from '../types';
 import { getTranslatedCategoryKey } from '../utils/localization';
+import { getErrorMessage, isAbortLikeError } from '../utils/errors';
 
 interface GalleryModalProps {
   artwork: Artwork;
@@ -260,7 +261,6 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
   }, []);
 
   useEffect(() => {
-    const abortController = new AbortController();
     let isMounted = true;
 
     const fetchContent = async () => {
@@ -276,18 +276,11 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             categories (name)
           `)
           .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .abortSignal(abortController.signal);
+          .order('created_at', { ascending: false });
 
-        const categoriesQuery = supabase
-          .from('categories')
-          .select('*')
-          .abortSignal(abortController.signal);
+        const categoriesQuery = supabase.from('categories').select('*');
 
-        const authorsQuery = supabase
-          .from('authors')
-          .select('*')
-          .abortSignal(abortController.signal);
+        const authorsQuery = supabase.from('authors').select('*');
 
         const [
           { data: artworksData, error: artworksError },
@@ -330,12 +323,12 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
           return;
         }
 
-        // Abort is expected when navigating away quickly.
-        if ((error as any)?.name === 'AbortError') {
+        // Abort/timeouts should never break UX and shouldn't spam logs.
+        if (isAbortLikeError(error)) {
           return;
         }
 
-        console.error('Error loading gallery:', error);
+        console.error('Error loading gallery:', getErrorMessage(error));
         setHasLoadError(true);
       } finally {
         if (isMounted) {
@@ -348,7 +341,6 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
 
     return () => {
       isMounted = false;
-      abortController.abort();
     };
   }, [reloadTick]);
 

@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 
 const fetchWithTimeout: typeof fetch = async (input, init) => {
   const timeoutController = new AbortController();

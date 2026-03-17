@@ -5,6 +5,7 @@ import { View } from '../App';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
 import { ArtReveal } from './ArtReveal';
+import { getErrorMessage, isAbortLikeError } from '../utils/errors';
 
 interface HeroProps {
   setView: (view: View) => void;
@@ -63,7 +64,6 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
   const paintingImageUrl = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=1200';
 
   useEffect(() => {
-    const abortController = new AbortController();
     let isMounted = true;
 
     const loadHeroMeta = async () => {
@@ -72,8 +72,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           .from('site_content')
           .select('content')
           .eq('key', 'hero_image')
-          .single()
-          .abortSignal(abortController.signal);
+          .single();
 
         if (error) {
           throw error;
@@ -91,9 +90,9 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           });
         }
       } catch (error) {
-        if ((error as any)?.name !== 'AbortError') {
+        if (!isAbortLikeError(error)) {
           // Keep defaults.
-          console.error('Error loading hero meta:', error);
+          console.error('Error loading hero meta:', getErrorMessage(error));
         }
       }
     };
@@ -103,8 +102,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
         const { data, error } = await supabase
           .from('site_settings')
           .select('instagram_url, facebook_url, twitter_url, email_address')
-          .single()
-          .abortSignal(abortController.signal);
+          .single();
 
         if (error) {
           throw error;
@@ -123,9 +121,9 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           });
         }
       } catch (error) {
-        if ((error as any)?.name !== 'AbortError') {
+        if (!isAbortLikeError(error)) {
           // Keep defaults.
-          console.error('Error loading hero social links:', error);
+          console.error('Error loading hero social links:', getErrorMessage(error));
         }
       }
     };
@@ -135,7 +133,6 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
 
     return () => {
       isMounted = false;
-      abortController.abort();
     };
   }, []);
 

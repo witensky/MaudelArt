@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2, Palette, Piano, Quote, Scissors } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
+import { getErrorMessage, isAbortLikeError } from '../utils/errors';
 
 type LocalizedText = string | { fr?: string; en?: string };
 
@@ -132,7 +133,6 @@ const Biography: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const abortController = new AbortController();
     let isMounted = true;
 
     const loadBiography = async () => {
@@ -141,8 +141,7 @@ const Biography: React.FC = () => {
           .from('site_content')
           .select('content')
           .eq('key', 'biography')
-          .single()
-          .abortSignal(abortController.signal);
+          .single();
 
         if (error) {
           throw error;
@@ -160,11 +159,11 @@ const Biography: React.FC = () => {
           return;
         }
 
-        if ((error as any)?.name === 'AbortError') {
+        if (isAbortLikeError(error)) {
           return;
         }
 
-        console.error('Error loading biography:', error);
+        console.error('Error loading biography:', getErrorMessage(error));
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -176,7 +175,6 @@ const Biography: React.FC = () => {
 
     return () => {
       isMounted = false;
-      abortController.abort();
     };
   }, []);
 

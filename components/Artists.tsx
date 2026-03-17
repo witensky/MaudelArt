@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Palette, Search, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
+import { getErrorMessage, isAbortLikeError } from '../utils/errors';
 
 interface ArtistsProps {
   onArtistSelect: (authorId: string) => void;
@@ -20,7 +21,6 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
   const retryLoad = () => setReloadTick((tick) => tick + 1);
 
   useEffect(() => {
-    const abortController = new AbortController();
     let isMounted = true;
 
     const fetchArtists = async () => {
@@ -31,8 +31,7 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
         const { data: authorsData, error: authorsError } = await supabase
           .from('authors')
           .select('*')
-          .order('name', { ascending: true })
-          .abortSignal(abortController.signal);
+          .order('name', { ascending: true });
 
         if (authorsError) {
           throw authorsError;
@@ -50,8 +49,7 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
             .from('artworks')
             .select('author_id')
             .in('author_id', authorIds)
-            .eq('is_active', true)
-            .abortSignal(abortController.signal);
+            .eq('is_active', true);
 
           if (artworksError) {
             throw artworksError;
@@ -79,11 +77,11 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
           return;
         }
 
-        if ((error as any)?.name === 'AbortError') {
+        if (isAbortLikeError(error)) {
           return;
         }
 
-        console.error('Error loading artists:', error);
+        console.error('Error loading artists:', getErrorMessage(error));
         setHasLoadError(true);
       } finally {
         if (isMounted) {
@@ -96,7 +94,6 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
 
     return () => {
       isMounted = false;
-      abortController.abort();
     };
   }, [reloadTick]);
 
