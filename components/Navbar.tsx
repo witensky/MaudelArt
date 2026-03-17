@@ -145,7 +145,7 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
 
         <button
           onClick={() => setIsMenuOpen((value) => !value)}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+          className="col-start-3 flex h-10 w-10 flex-shrink-0 justify-self-end items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
           aria-label={t('nav.menu')}
           aria-expanded={isMenuOpen}
         >
