@@ -132,17 +132,52 @@ const Biography: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const loadBiography = async () => {
-      const { data } = await supabase.from('site_content').select('content').eq('key', 'biography').single();
+      try {
+        const { data, error } = await supabase
+          .from('site_content')
+          .select('content')
+          .eq('key', 'biography')
+          .single()
+          .abortSignal(abortController.signal);
 
-      if (data?.content) {
-        setRemoteBio(data.content as Partial<BioContent>);
+        if (error) {
+          throw error;
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (data?.content) {
+          setRemoteBio(data.content as Partial<BioContent>);
+        }
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        if ((error as any)?.name === 'AbortError') {
+          return;
+        }
+
+        console.error('Error loading biography:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
     };
 
     loadBiography();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   const bio = useMemo<BioContent>(() => ({

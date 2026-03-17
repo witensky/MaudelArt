@@ -3,6 +3,8 @@ export const translations = {
     common: {
       loading: 'Chargement...',
       retry: 'Réessayer',
+      loadErrorTitle: 'Impossible de charger',
+      loadErrorDescription: 'Probleme de connexion. Merci de reessayer dans quelques instants.',
       navigation: 'Navigation',
       discover: 'Découvrir',
       newsletter: 'Newsletter',
@@ -228,6 +230,8 @@ export const translations = {
     common: {
       loading: 'Loading...',
       retry: 'Retry',
+      loadErrorTitle: 'Unable to load',
+      loadErrorDescription: 'Connection issue. Please try again in a moment.',
       navigation: 'Navigation',
       discover: 'Discover',
       newsletter: 'Newsletter',

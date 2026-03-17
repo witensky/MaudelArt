@@ -252,11 +252,23 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
   const [authors, setAuthors] = useState<any[]>(STATIC_AUTHORS);
   const [categories, setCategories] = useState<string[]>(['All']);
   const [loading, setLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
+
+  const retryLoad = useCallback(() => {
+    setReloadTick((tick) => tick + 1);
+  }, []);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const fetchContent = async () => {
       try {
-        const { data: artworksData } = await supabase
+        setLoading(true);
+        setHasLoadError(false);
+
+        const artworksQuery = supabase
           .from('artworks')
           .select(`
             id, title, technique, dimensions, year, image_url, description,
@@ -264,10 +276,32 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             categories (name)
           `)
           .eq('is_active', true)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .abortSignal(abortController.signal);
 
-        const { data: categoriesData } = await supabase.from('categories').select('*');
-        const { data: authorsData } = await supabase.from('authors').select('*');
+        const categoriesQuery = supabase
+          .from('categories')
+          .select('*')
+          .abortSignal(abortController.signal);
+
+        const authorsQuery = supabase
+          .from('authors')
+          .select('*')
+          .abortSignal(abortController.signal);
+
+        const [
+          { data: artworksData, error: artworksError },
+          { data: categoriesData, error: categoriesError },
+          { data: authorsData, error: authorsError },
+        ] = await Promise.all([artworksQuery, categoriesQuery, authorsQuery]);
+
+        if (artworksError || categoriesError || authorsError) {
+          throw artworksError ?? categoriesError ?? authorsError;
+        }
+
+        if (!isMounted) {
+          return;
+        }
 
         if (categoriesData) {
           setCategories(['All', ...categoriesData.map((category) => category.name)]);
@@ -285,21 +319,38 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             authorId: artwork.author_id,
             collectionId: artwork.collection_id,
             year: artwork.year,
-            technique: artwork.technique,
+            technique: artwork.technique ?? '',
             image: artwork.image_url,
-            description: artwork.description,
-            dimensions: artwork.dimensions,
+            description: artwork.description ?? '',
+            dimensions: artwork.dimensions ?? '',
           })));
         }
       } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        // Abort is expected when navigating away quickly.
+        if ((error as any)?.name === 'AbortError') {
+          return;
+        }
+
         console.error('Error loading gallery:', error);
+        setHasLoadError(true);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchContent();
-  }, []);
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [reloadTick]);
 
   const filteredArtworks = useMemo(() => {
     return artworks.filter((artwork) => {
@@ -392,6 +443,26 @@ const Gallery: React.FC<GalleryProps> = ({ onPurchase, selectedArtistFilter }) =
             MaudelArt
           </span>
           <span className="text-xs italic text-emerald-950/30 serif">{t('gallery.loading')}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasLoadError && artworks.length === 0) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#fcfcf9] px-6 pb-20 pt-40">
+        <div className="w-full max-w-md rounded-3xl border border-emerald-950/10 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
+            <Loader2 className="text-emerald-600" size={20} />
+          </div>
+          <h2 className="mb-2 text-2xl text-emerald-950 serif">{t('common.loadErrorTitle')}</h2>
+          <p className="mb-6 text-sm leading-relaxed text-emerald-950/50">{t('common.loadErrorDescription')}</p>
+          <button
+            onClick={retryLoad}
+            className="rounded-full bg-emerald-950 px-6 py-3 text-[11px] font-black uppercase tracking-wider text-[#d4af37] shadow-md transition-colors hover:bg-emerald-800"
+          >
+            {t('common.retry')}
+          </button>
         </div>
       </div>
     );

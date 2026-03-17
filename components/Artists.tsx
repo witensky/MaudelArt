@@ -14,39 +14,91 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
   const [loading, setLoading] = useState(true);
   const [artworkCounts, setArtworkCounts] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
+
+  const retryLoad = () => setReloadTick((tick) => tick + 1);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const fetchArtists = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
+        setHasLoadError(false);
 
-      const { data: authorsData } = await supabase.from('authors').select('*').order('name', { ascending: true });
+        const { data: authorsData, error: authorsError } = await supabase
+          .from('authors')
+          .select('*')
+          .order('name', { ascending: true })
+          .abortSignal(abortController.signal);
 
-      if (authorsData && authorsData.length > 0) {
-        setArtists(authorsData);
+        if (authorsError) {
+          throw authorsError;
+        }
 
-        const authorIds = authorsData.map((artist) => artist.id);
-        const { data: artworksData } = await supabase
-          .from('artworks')
-          .select('author_id')
-          .in('author_id', authorIds)
-          .eq('is_active', true);
+        if (!isMounted) {
+          return;
+        }
 
-        const counts: Record<string, number> = {};
-        authorIds.forEach((id) => { counts[id] = 0; });
-        artworksData?.forEach((artwork) => {
-          if (counts[artwork.author_id] !== undefined) {
-            counts[artwork.author_id] += 1;
+        if (authorsData && authorsData.length > 0) {
+          setArtists(authorsData);
+
+          const authorIds = authorsData.map((artist) => artist.id);
+          const { data: artworksData, error: artworksError } = await supabase
+            .from('artworks')
+            .select('author_id')
+            .in('author_id', authorIds)
+            .eq('is_active', true)
+            .abortSignal(abortController.signal);
+
+          if (artworksError) {
+            throw artworksError;
           }
-        });
 
-        setArtworkCounts(counts);
+          if (!isMounted) {
+            return;
+          }
+
+          const counts: Record<string, number> = {};
+          authorIds.forEach((id) => { counts[id] = 0; });
+          artworksData?.forEach((artwork) => {
+            if (counts[artwork.author_id] !== undefined) {
+              counts[artwork.author_id] += 1;
+            }
+          });
+
+          setArtworkCounts(counts);
+        } else {
+          setArtists([]);
+          setArtworkCounts({});
+        }
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        if ((error as any)?.name === 'AbortError') {
+          return;
+        }
+
+        console.error('Error loading artists:', error);
+        setHasLoadError(true);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
     };
 
     fetchArtists();
-  }, []);
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [reloadTick]);
 
   const filteredArtists = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -74,6 +126,26 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
           <span className="text-sm font-medium uppercase tracking-widest text-emerald-700/60">
             {t('artists.loading')}
           </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasLoadError && artists.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fcfcf9] px-6 pb-20 pt-40">
+        <div className="w-full max-w-md rounded-3xl border border-emerald-950/10 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
+            <Palette className="text-emerald-600" size={20} />
+          </div>
+          <h2 className="mb-2 text-2xl text-emerald-950 serif">{t('common.loadErrorTitle')}</h2>
+          <p className="mb-6 text-sm leading-relaxed text-emerald-950/50">{t('common.loadErrorDescription')}</p>
+          <button
+            onClick={retryLoad}
+            className="rounded-full bg-emerald-950 px-6 py-3 text-[11px] font-black uppercase tracking-wider text-[#d4af37] shadow-md transition-colors hover:bg-emerald-800"
+          >
+            {t('common.retry')}
+          </button>
         </div>
       </div>
     );

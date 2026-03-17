@@ -63,24 +63,56 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
   const paintingImageUrl = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=1200';
 
   useEffect(() => {
-    const loadHeroMeta = async () => {
-      const { data } = await supabase.from('site_content').select('content').eq('key', 'hero_image').single();
+    const abortController = new AbortController();
+    let isMounted = true;
 
-      if (data?.content) {
-        setHeroMeta({
-          title: data.content.title || DEFAULT_HERO_META.title,
-          description: data.content.description || DEFAULT_HERO_META.description,
-          label: data.content.label || DEFAULT_HERO_META.label,
-        });
+    const loadHeroMeta = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('site_content')
+          .select('content')
+          .eq('key', 'hero_image')
+          .single()
+          .abortSignal(abortController.signal);
+
+        if (error) {
+          throw error;
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (data?.content) {
+          setHeroMeta({
+            title: data.content.title || DEFAULT_HERO_META.title,
+            description: data.content.description || DEFAULT_HERO_META.description,
+            label: data.content.label || DEFAULT_HERO_META.label,
+          });
+        }
+      } catch (error) {
+        if ((error as any)?.name !== 'AbortError') {
+          // Keep defaults.
+          console.error('Error loading hero meta:', error);
+        }
       }
     };
 
     const loadSocialLinks = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('site_settings')
           .select('instagram_url, facebook_url, twitter_url, email_address')
-          .single();
+          .single()
+          .abortSignal(abortController.signal);
+
+        if (error) {
+          throw error;
+        }
+
+        if (!isMounted) {
+          return;
+        }
 
         if (data) {
           setSocialLinks({
@@ -90,13 +122,21 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
             email: data.email_address ? `mailto:${data.email_address}` : DEFAULT_SOCIAL.email,
           });
         }
-      } catch (_) {
-        // Keep defaults.
+      } catch (error) {
+        if ((error as any)?.name !== 'AbortError') {
+          // Keep defaults.
+          console.error('Error loading hero social links:', error);
+        }
       }
     };
 
     loadHeroMeta();
     loadSocialLinks();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   const mouseX = useMotionValue(0);
