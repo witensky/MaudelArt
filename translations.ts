@@ -55,7 +55,7 @@ export const translations = {
     hero: {
       discover: 'Découvrir,',
       collect: 'Collectionner',
-      rareArt: "L'Art Rare",
+      rareArt: "La peinture d'après la nature",
       description: "L'excellence de la peinture haïtienne sublimée par la vision contemporaine de Marie Maude Eliacin.",
       exploreGallery: 'Explorer la galerie',
       watchVideo: 'Voir vidéo',
