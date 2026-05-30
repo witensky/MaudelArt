@@ -1,15 +1,13 @@
 /* ========================================
    RESPONSIVE DESIGN - MAUDELART PREMIUM
-   Mobile-First Architecture
+   Safe, scoped — no global Tailwind conflicts
    ======================================== */
 
-/* Global Reset & Base Styles */
-* {
-  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
-  box-sizing: border-box;
-}
-
-html, body {
+/* ========================================
+   BASE RESETS (safe, non-conflicting)
+   ======================================== */
+html,
+body {
   width: 100%;
   overflow-x: hidden;
   margin: 0;
@@ -20,6 +18,7 @@ body {
   position: relative;
 }
 
+<<<<<<< HEAD
 /* ========================================
    MOBILE FIRST - Extra Small (< 480px)
    ======================================== */
@@ -457,18 +456,12 @@ html, body {
   overflow-x: hidden;
 }
 
+=======
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
 img {
   display: block;
   max-width: 100%;
   height: auto;
-}
-
-input, textarea, select {
-  font-size: 16px !important;
-  padding: 12px 16px !important;
-  width: 100%;
-  border-radius: 6px;
-  font-family: inherit;
 }
 
 a {
@@ -477,57 +470,128 @@ a {
   transition: all 0.3s ease;
 }
 
-/* Flex utilities for responsive */
-.flex-col {
+/* ========================================
+   CATEGORY TABS - Horizontal scroll
+   ======================================== */
+.category-tabs-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 transparent;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar {
+  height: 3px;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 2px;
+}
+
+.category-tabs-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #c9a227;
+}
+
+.category-tabs-wrapper button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ========================================
+   GALLERY MODAL — Scoped, can't be broken
+   ======================================== */
+.gallery-modal {
+  /* Ensure the modal is completely isolated from global grid overrides */
+  display: flex !important;
+  grid-template-columns: none !important;
+}
+
+.gallery-modal-inner {
+  /* Side-by-side layout on desktop, stacked on mobile */
+  display: flex;
   flex-direction: column;
 }
 
-.flex-row {
-  flex-direction: row;
+@media (min-width: 1024px) {
+  .gallery-modal-inner {
+    flex-direction: row;
+  }
 }
 
-/* Touch-friendly spacing */
-@media (max-width: 768px) {
-  .sm\:flex-col {
-    flex-direction: column;
+/* ========================================
+   ADMIN SIDEBAR — Scoped button reset
+   ======================================== */
+.admin-sidebar-btn {
+  /* Neutralize any global button overrides */
+  padding: 1rem 1.25rem !important;
+  min-height: auto !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  font-size: 0.875rem !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* ========================================
+   MOBILE ONLY — Extra Small (< 480px)
+   ======================================== */
+@media (max-width: 479px) {
+
+  /* iOS zoom prevention */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 
-  .sm\:w-full {
-    width: 100% !important;
-  }
-
-  .sm\:gap-2 {
-    gap: 0.5rem !important;
-  }
-
-  .sm\:px-4 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .sm\:py-2 {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-
-  /* Ensure minimum touch targets */
-  button[type="button"],
-  button[type="submit"],
-  a[role="button"],
-  [role="button"] {
+  /* Touch target minimums — links only (not buttons, to avoid breaking styled buttons) */
+  a:not([class]) {
     min-height: 44px;
-    min-width: 44px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+  }
+
+  /* Navbar */
+  nav {
+    height: 60px !important;
+    min-height: 60px !important;
+  }
+
+  /* Category tabs mobile spacing */
+  .category-tabs-wrapper {
+    margin-bottom: 2rem;
+  }
+
+  .category-tabs-wrapper>div {
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* ========================================
+   SMALL (480px - 640px)
+   ======================================== */
+@media (min-width: 480px) and (max-width: 640px) {
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
 
 /* ========================================
    ACCESSIBILITY
    ======================================== */
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -536,51 +600,20 @@ a {
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: more) {
-  * {
-    border-width: 2px;
-  }
-
   button {
     font-weight: bold;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1a1a1a;
-    color: #ffffff;
-  }
-
-  .bg-white {
-    background-color: #2a2a2a;
-  }
-
-  .text-gray-900 {
-    color: #ffffff;
-  }
-
-  .text-gray-700 {
-    color: #e0e0e0;
-  }
-
-  .text-gray-600 {
-    color: #b0b0b0;
-  }
-
-  .border-gray-200 {
-    border-color: #404040;
+    outline: 2px solid currentColor;
   }
 }
 
 /* ========================================
-   PRINT STYLES
+   PRINT
    ======================================== */
-
 @media print {
-  html, body {
+
+  html,
+  body {
     background: white;
     color: black;
   }
@@ -589,11 +622,8 @@ a {
     display: none !important;
   }
 
-  nav, footer {
+  nav,
+  footer {
     display: none;
-  }
-
-  button, a {
-    text-decoration: underline;
   }
 }

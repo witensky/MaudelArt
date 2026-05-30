@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react';
 import { NavigationOptions, View } from '../App';
 import { useI18n } from '../i18n/I18nContext';
+=======
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react';
+import { View } from '../App';
+import { useLanguage } from '../contexts/LanguageContext';
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
 import { supabase } from '../supabaseClient';
 import LanguageSwitcher from './LanguageSwitcher';
 
@@ -13,6 +21,7 @@ interface NavbarProps {
   user: any;
 }
 
+<<<<<<< HEAD
 const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user }) => {
   const { messages } = useI18n();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,6 +30,13 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileLabel = user?.user_metadata?.full_name || user?.email || messages.nav.profile;
   const profileInitial = (profileLabel?.trim()?.charAt(0) || 'M').toUpperCase();
+=======
+const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) => {
+  const { language, setLanguage, t } = useLanguage();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -28,6 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
       if (!profileMenuRef.current?.contains(event.target as Node)) {
@@ -59,23 +76,72 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
     await supabase.auth.signOut();
     setIsProfileOpen(false);
     navigateTo('home', { replace: true });
+=======
+  const handleNavClick = (view: View) => {
+    setView(view);
+    setIsMenuOpen(false);
+    setIsProfileOpen(false);
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsProfileOpen(false);
+    handleNavClick('home');
+  };
+
+  const navLinks: { name: string; id: View }[] = [
+    { name: t('nav.home'), id: 'home' },
+    { name: t('nav.gallery'), id: 'gallery' },
+    { name: t('nav.artists'), id: 'artists' },
+    { name: t('nav.about'), id: 'bio' },
+    { name: t('nav.contact'), id: 'contact' },
+  ];
+
+  const languageSwitcher = (
+    <div className="flex items-center rounded-full border border-black/10 bg-gray-100/80 p-1">
+      <button
+        onClick={() => setLanguage('fr')}
+        className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${language === 'fr' ? 'bg-white text-maudel-dark shadow-sm' : 'text-gray-500 hover:text-maudel-dark'}`}
+        aria-label={t('language.french')}
+      >
+        {t('language.shortFrench')}
+      </button>
+      <button
+        onClick={() => setLanguage('en')}
+        className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${language === 'en' ? 'bg-white text-maudel-dark shadow-sm' : 'text-gray-500 hover:text-maudel-dark'}`}
+        aria-label={t('language.english')}
+      >
+        {t('language.shortEnglish')}
+      </button>
+    </div>
+  );
+
   return (
+<<<<<<< HEAD
     <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white'} h-14 md:h-[60px]`}>
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 flex justify-between items-center max-w-full">
+=======
+    <nav className={`fixed left-0 top-0 z-[100] h-14 w-full transition-all duration-300 md:h-[60px] ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
+      <div className="grid h-full w-full max-w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:gap-8 lg:px-8">
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
         <button
           onClick={() => handleNavClick('home')}
-          className="font-serif text-base sm:text-lg md:text-xl font-bold text-gray-900 hover:opacity-70 transition-opacity flex-shrink-0 whitespace-nowrap py-2"
+          className="whitespace-nowrap py-2 text-base font-bold text-gray-900 transition-opacity hover:opacity-70 sm:text-lg md:text-xl font-serif"
         >
           MAUDELART
         </button>
 
+<<<<<<< HEAD
         <div className="hidden md:flex items-center gap-6 lg:gap-8">
+=======
+        <div className="hidden min-w-0 items-center justify-center gap-8 md:flex lg:gap-12 xl:gap-16">
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
           {navLinks.map((link) => (
-            <button
+            <motion.button
               key={link.id}
               onClick={() => handleNavClick(link.id)}
+<<<<<<< HEAD
               className={`group relative text-xs lg:text-sm font-semibold transition-all duration-300 whitespace-nowrap px-3 lg:px-4 py-3 ${
                 currentView === link.id ? 'text-emerald-950' : 'text-gray-700 hover:text-emerald-950'
               }`}
@@ -99,10 +165,31 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
 
         <div className="hidden md:flex items-center gap-2 lg:gap-4">
           <LanguageSwitcher />
+=======
+              className={`relative whitespace-nowrap py-2 text-xs font-medium transition-colors lg:text-sm ${currentView === link.id ? 'font-bold text-maudel-dark' : 'text-gray-600 hover:text-maudel-dark'}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {link.name}
+              {currentView === link.id && (
+                <motion.div
+                  layoutId="underline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gold"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+            </motion.button>
+          ))}
+        </div>
+
+        <div className="hidden items-center gap-2 md:flex lg:gap-4">
+          {languageSwitcher}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
 
           {user ? (
             <div className="relative" ref={profileMenuRef}>
               <button
+<<<<<<< HEAD
                 onClick={() => setIsProfileOpen((open) => !open)}
                 className={`group flex h-12 items-center gap-3 rounded-2xl border px-3 py-2 shadow-sm transition-all ${
                   isProfileOpen
@@ -112,6 +199,11 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
                 aria-label={messages.nav.profileMenu}
                 aria-expanded={isProfileOpen}
                 aria-haspopup="menu"
+=======
+                onClick={() => setIsProfileOpen((value) => !value)}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg p-2 transition-colors hover:bg-gray-100"
+                aria-label={t('nav.profileMenu')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-950 text-xs font-black uppercase text-[#d4af37]">
                   {profileInitial}
@@ -124,6 +216,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
               </button>
 
               {isProfileOpen && (
+<<<<<<< HEAD
                 <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-gray-200 bg-white py-2 shadow-[0_20px_60px_rgba(15,23,42,0.16)] z-50">
                   <div className="border-b border-gray-100 px-4 py-3">
                     <p className="truncate text-sm font-semibold text-gray-900">{profileLabel}</p>
@@ -139,10 +232,19 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
                   >
                     <User size={16} className="text-gray-400" />
                     {messages.nav.profile}
+=======
+                <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
+                  <button
+                    onClick={() => handleNavClick('profile')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    {t('nav.profile')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                   </button>
 
                   {isAdmin && (
                     <button
+<<<<<<< HEAD
                       onClick={() => {
                         handleNavClick('admin');
                         setIsProfileOpen(false);
@@ -150,6 +252,12 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
                       className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
                     >
                       <LayoutDashboard size={15} className="text-gray-400" /> {messages.nav.admin}
+=======
+                      onClick={() => handleNavClick('admin')}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <LayoutDashboard size={14} /> {t('nav.admin')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                     </button>
                   )}
 
@@ -157,9 +265,15 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
 
                   <button
                     onClick={handleLogout}
+<<<<<<< HEAD
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
                   >
                     <LogOut size={15} /> {messages.nav.logout}
+=======
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={14} /> {t('nav.logout')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                   </button>
                 </div>
               )}
@@ -167,17 +281,27 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
           ) : (
             <button
               onClick={() => handleNavClick('auth')}
-              className="px-4 lg:px-6 py-2 bg-green-700 text-white rounded-lg text-xs lg:text-sm font-medium hover:bg-green-800 transition-colors flex-shrink-0"
+              className="flex-shrink-0 rounded-lg bg-green-700 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-green-800 lg:px-6 lg:text-sm"
             >
+<<<<<<< HEAD
               {messages.nav.signIn}
+=======
+              {t('nav.login')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
             </button>
           )}
         </div>
 
         <button
+<<<<<<< HEAD
           onClick={() => setIsMenuOpen((open) => !open)}
           className="md:hidden p-2 text-gray-700 flex-shrink-0 hover:bg-gray-100 rounded-lg transition-colors h-10 w-10 flex items-center justify-center"
           aria-label={messages.nav.menu}
+=======
+          onClick={() => setIsMenuOpen((value) => !value)}
+          className="col-start-3 flex h-10 w-10 flex-shrink-0 justify-self-end items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+          aria-label={t('nav.menu')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
           aria-expanded={isMenuOpen}
         >
           {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -189,9 +313,16 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-1 max-w-full overflow-y-auto absolute w-full shadow-xl"
+          className="absolute w-full max-w-full overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 shadow-xl md:hidden"
           style={{ maxHeight: 'calc(100vh - 56px)' }}
         >
+          <div className="mb-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              {t('language.label')}
+            </span>
+            {languageSwitcher}
+          </div>
+
           <div className="flex flex-col gap-0">
             <div className="px-4 pb-3">
               <LanguageSwitcher compact />
@@ -201,9 +332,13 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
+<<<<<<< HEAD
                 className={`text-sm font-semibold text-left py-3 px-4 rounded-xl transition-all duration-300 w-full min-h-[48px] flex items-center justify-between ${
                   currentView === link.id ? 'bg-emerald-50 text-emerald-950 shadow-sm' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                 }`}
+=======
+                className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
               >
                 <span>{link.name}</span>
                 {currentView === link.id && (
@@ -216,11 +351,12 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
               </button>
             ))}
 
-            {user && (
+            {user ? (
               <>
                 <hr className="my-2" />
 
                 <button
+<<<<<<< HEAD
                   onClick={() => {
                     handleNavClick('profile');
                     setIsMenuOpen(false);
@@ -229,35 +365,48 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentView, isAdmin, user 
                 >
                   <User size={16} />
                   {messages.nav.profile}
+=======
+                  onClick={() => handleNavClick('profile')}
+                  className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                >
+                  {t('nav.profile')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                 </button>
 
                 {isAdmin && (
                   <button
-                    onClick={() => {
-                      handleNavClick('admin');
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-gray-700 text-sm font-medium text-left hover:text-gray-900 hover:bg-gray-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center gap-2"
+                    onClick={() => handleNavClick('admin')}
+                    className="flex h-[44px] w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
                   >
+<<<<<<< HEAD
                     <LayoutDashboard size={16} /> {messages.nav.admin}
+=======
+                    <LayoutDashboard size={16} /> {t('nav.admin')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                   </button>
                 )}
 
                 <button
                   onClick={handleLogout}
-                  className="text-red-600 text-sm font-medium text-left hover:bg-red-50 py-3 px-4 rounded-lg transition-colors w-full h-[44px] flex items-center gap-2"
+                  className="flex h-[44px] w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                 >
+<<<<<<< HEAD
                   <LogOut size={16} /> {messages.nav.logout}
+=======
+                  <LogOut size={16} /> {t('nav.logout')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
                 </button>
               </>
-            )}
-
-            {!user && (
+            ) : (
               <button
                 onClick={() => handleNavClick('auth')}
-                className="w-full px-4 py-3 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors mt-3 h-[44px] flex items-center justify-center"
+                className="mt-3 flex h-[44px] w-full items-center justify-center rounded-lg bg-green-700 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-green-800"
               >
+<<<<<<< HEAD
                 {messages.nav.signIn}
+=======
+                {t('nav.login')}
+>>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
               </button>
             )}
           </div>
