@@ -172,7 +172,7 @@ body {
     flex-shrink: 0;
     min-width: auto;
     padding: 0.5rem 0.75rem;
-    height: 3rem;
+    min-height: 3rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,9 +181,9 @@ body {
   /* Prevent text overflow in tabs */
   .category-tabs-wrapper button {
     white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    max-width: 140px;
+    text-overflow: clip;
+    overflow: visible;
+    max-width: none;
   }
 
   /* Modal optimization */
@@ -235,7 +235,11 @@ body {
   }
 
   .category-tabs-wrapper > div {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     padding-bottom: 0.75rem;
+    width: max-content;
+    min-width: 100%;
   }
 
   /* Touch target sizes - ensure 44-48px minimum */

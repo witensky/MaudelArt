@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Github, Chrome, ArrowLeft, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Chrome, Loader2, Lock, Mail, User } from 'lucide-react';
+import { NavigationOptions, View } from '../App';
+import { useI18n } from '../i18n/I18nContext';
 import { supabase } from '../supabaseClient';
-import { View } from '../App';
 
 interface AuthProps {
-  setView: (view: View) => void;
+  navigateTo: (view: View, options?: NavigationOptions) => void;
 }
 
-const Auth: React.FC<AuthProps> = ({ setView }) => {
+const Auth: React.FC<AuthProps> = ({ navigateTo }) => {
+  const { messages } = useI18n();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,14 +18,14 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -33,18 +34,21 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
             },
           },
         });
-        if (error) throw error;
-        // Auto sign in happens, App.tsx listener will handle it
+
+        if (signUpError) {
+          throw signUpError;
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (signInError) {
+          throw signInError;
+        }
       }
-      setView('home');
-    } catch (err: any) {
-      setError(err.message || "Une erreur est survenue.");
+
+      navigateTo('home');
+    } catch (caughtError: any) {
+      setError(caughtError.message || messages.auth.defaultError);
     } finally {
       setLoading(false);
     }
@@ -52,7 +56,6 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
 
   return (
     <div className="min-h-screen bg-[#041a14] pt-40 pb-20 px-6 flex items-center justify-center relative overflow-hidden">
-      {/* Cinematic Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-400/5 blur-[120px] rounded-full" />
@@ -60,20 +63,16 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
 
       <div className="max-w-md w-full relative z-10">
         <button
-          onClick={() => setView('home')}
+          onClick={() => navigateTo('home')}
           className="mb-8 flex items-center gap-2 text-white/40 hover:text-emerald-400 transition-colors uppercase text-[10px] font-black tracking-widest"
         >
-          <ArrowLeft size={14} /> Retour à l'accueil
+          <ArrowLeft size={14} /> {messages.auth.backHome}
         </button>
 
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[40px] p-10 shadow-2xl">
           <div className="text-center mb-10">
-            <h2 className="text-4xl serif text-white mb-4">
-              {mode === 'login' ? 'Bienvenue' : 'Nous rejoindre'}
-            </h2>
-            <p className="text-white/40 text-sm">
-              {mode === 'login' ? 'Accédez à votre collection privée.' : 'Créez un compte pour collectionner l\'art.'}
-            </p>
+            <h2 className="text-4xl serif text-white mb-4">{mode === 'login' ? messages.auth.loginTitle : messages.auth.signupTitle}</h2>
+            <p className="text-white/40 text-sm">{mode === 'login' ? messages.auth.loginSubtitle : messages.auth.signupSubtitle}</p>
             {error && (
               <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-xs">
                 {error}
@@ -81,19 +80,18 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
             )}
           </div>
 
-          {/* Tab Switcher */}
           <div className="flex bg-white/5 rounded-2xl p-1 mb-10">
             <button
               onClick={() => setMode('login')}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${mode === 'login' ? 'bg-emerald-500 text-emerald-950' : 'text-white/40 hover:text-white'}`}
             >
-              Connexion
+              {messages.auth.loginTab}
             </button>
             <button
               onClick={() => setMode('signup')}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${mode === 'signup' ? 'bg-emerald-500 text-emerald-950' : 'text-white/40 hover:text-white'}`}
             >
-              Inscription
+              {messages.auth.signupTab}
             </button>
           </div>
 
@@ -110,9 +108,9 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                     <input
                       type="text"
-                      placeholder="Nom complet"
+                      placeholder={messages.auth.fullName}
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(event) => setFullName(event.target.value)}
                       className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                     />
                   </div>
@@ -124,9 +122,9 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
               <input
                 type="email"
-                placeholder="Adresse email"
+                placeholder={messages.auth.email}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all"
               />
             </div>
@@ -135,9 +133,9 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
               <input
                 type="password"
-                placeholder="Mot de passe"
+                placeholder={messages.auth.password}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all"
               />
             </div>
@@ -148,14 +146,13 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
               className="w-full py-4 bg-emerald-500 text-emerald-950 font-black uppercase tracking-widest text-[11px] rounded-2xl shadow-xl shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="animate-spin" size={16} />}
-              {mode === 'login' ? 'Se connecter' : 'Créer un compte'}
+              {mode === 'login' ? messages.auth.signIn : messages.auth.signUp}
             </button>
           </form>
 
-          {/* Social Auth Divider */}
           <div className="flex items-center gap-4 my-10">
             <div className="h-px bg-white/10 flex-1" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Ou</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/20">{messages.auth.or}</span>
             <div className="h-px bg-white/10 flex-1" />
           </div>
 
@@ -163,28 +160,31 @@ const Auth: React.FC<AuthProps> = ({ setView }) => {
             type="button"
             onClick={async () => {
               try {
-                const { error } = await supabase.auth.signInWithOAuth({
+                const { error: oauthError } = await supabase.auth.signInWithOAuth({
                   provider: 'google',
                   options: {
-                    redirectTo: `${window.location.origin}/`
-                  }
+                    redirectTo: `${window.location.origin}/`,
+                  },
                 });
-                if (error) throw error;
-              } catch (err: any) {
-                setError(err.message);
+
+                if (oauthError) {
+                  throw oauthError;
+                }
+              } catch (caughtError: any) {
+                setError(caughtError.message);
               }
             }}
             className="w-full flex items-center justify-center gap-3 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/10 transition-all"
           >
-            <Chrome size={16} /> Continuer avec Google
+            <Chrome size={16} /> {messages.auth.continueWithGoogle}
           </button>
         </div>
 
         <p className="mt-8 text-center text-[10px] text-white/20 uppercase tracking-widest font-black">
-          En continuant, vous acceptez nos <a href="#" className="text-emerald-500 hover:underline">conditions d'utilisation</a>.
+          {messages.auth.terms}
         </p>
       </div>
-    </div >
+    </div>
   );
 };
 
