@@ -129,28 +129,26 @@ select {
 /* Category tabs container */
 .category-tabs-wrapper>div {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.75rem;
+  gap: 0;
   position: relative;
+  white-space: nowrap;
 }
 
 /* Individual category button */
 .category-tabs-wrapper button {
-  flex: 0 1 auto;
-  min-width: max-content;
-  padding: 0.75rem 1.25rem;
-  min-height: 3rem;
+  flex-shrink: 0;
+  min-width: auto;
+  padding: 0.5rem 0.75rem;
+  height: 3rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  white-space: normal;
-  text-overflow: clip;
-  overflow: visible;
-  max-width: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 140px;
   position: relative;
-  transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-  line-height: 1.2;
+  transition: color 0.3s ease;
 }
 
 /* Active tab indicator */

@@ -1,14 +1,15 @@
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { ArrowUpRight, Facebook, Instagram, Mail, Twitter } from 'lucide-react';
-import Navbar from './components/Navbar';
-import HeroNew from './components/Hero';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import ArtPreviewCarousel from './components/ArtPreviewCarousel';
+import HeroNew from './components/Hero';
+import Navbar from './components/Navbar';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import './index.css';
+import './responsive.css';
 import { supabase } from './supabaseClient';
 import { Artwork } from './types';
-import './index.css';
 
 const DEFAULT_SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/mariemaude_eliacin/',
