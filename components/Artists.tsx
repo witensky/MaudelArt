@@ -1,51 +1,43 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Palette } from 'lucide-react';
-import { useI18n } from '../i18n/I18nContext';
-import { supabase } from '../supabaseClient';
-=======
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Palette, Search, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
-import { getErrorMessage, isAbortLikeError } from '../utils/errors';
->>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
 
 interface ArtistsProps {
   onArtistSelect: (authorId: string) => void;
 }
 
 const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
-<<<<<<< HEAD
-  const { messages } = useI18n();
+  const { t } = useLanguage();
   const [artists, setArtists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [artworkCounts, setArtworkCounts] = useState<Record<string, number>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchArtists = async () => {
       setLoading(true);
 
-      const { data: authorsData } = await supabase
-        .from('authors')
-        .select('*')
-        .order('name', { ascending: true });
+      const { data: authorsData } = await supabase.from('authors').select('*').order('name', { ascending: true });
 
-      if (authorsData) {
+      if (authorsData && authorsData.length > 0) {
         setArtists(authorsData);
 
-        const counts: Record<string, number> = {};
-        for (const author of authorsData) {
-          const { count } = await supabase
-            .from('artworks')
-            .select('*', { count: 'exact', head: true })
-            .eq('author_id', author.id)
-            .eq('is_active', true);
+        const authorIds = authorsData.map((artist) => artist.id);
+        const { data: artworksData } = await supabase
+          .from('artworks')
+          .select('author_id')
+          .in('author_id', authorIds)
+          .eq('is_active', true);
 
-          counts[author.id] = count || 0;
-        }
+        const counts: Record<string, number> = {};
+        authorIds.forEach((id) => { counts[id] = 0; });
+        artworksData?.forEach((artwork) => {
+          if (counts[artwork.author_id] !== undefined) {
+            counts[artwork.author_id] += 1;
+          }
+        });
 
         setArtworkCounts(counts);
       }
@@ -55,98 +47,6 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
 
     fetchArtists();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#fcfcf9] pt-40 pb-20 px-6 flex items-center justify-center">
-        <div className="text-emerald-600 animate-pulse text-xl font-serif">{messages.artists.loading}</div>
-=======
-  const { t } = useLanguage();
-  const [artists, setArtists] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [artworkCounts, setArtworkCounts] = useState<Record<string, number>>({});
-  const [searchQuery, setSearchQuery] = useState('');
-  const [hasLoadError, setHasLoadError] = useState(false);
-  const [reloadTick, setReloadTick] = useState(0);
-
-  const retryLoad = () => setReloadTick((tick) => tick + 1);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchArtists = async () => {
-      try {
-        setLoading(true);
-        setHasLoadError(false);
-
-        const { data: authorsData, error: authorsError } = await supabase
-          .from('authors')
-          .select('*')
-          .order('name', { ascending: true });
-
-        if (authorsError) {
-          throw authorsError;
-        }
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (authorsData && authorsData.length > 0) {
-          setArtists(authorsData);
-
-          const authorIds = authorsData.map((artist) => artist.id);
-          const { data: artworksData, error: artworksError } = await supabase
-            .from('artworks')
-            .select('author_id')
-            .in('author_id', authorIds)
-            .eq('is_active', true);
-
-          if (artworksError) {
-            throw artworksError;
-          }
-
-          if (!isMounted) {
-            return;
-          }
-
-          const counts: Record<string, number> = {};
-          authorIds.forEach((id) => { counts[id] = 0; });
-          artworksData?.forEach((artwork) => {
-            if (counts[artwork.author_id] !== undefined) {
-              counts[artwork.author_id] += 1;
-            }
-          });
-
-          setArtworkCounts(counts);
-        } else {
-          setArtists([]);
-          setArtworkCounts({});
-        }
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-
-        if (isAbortLikeError(error)) {
-          return;
-        }
-
-        console.error('Error loading artists:', getErrorMessage(error));
-        setHasLoadError(true);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchArtists();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [reloadTick]);
 
   const filteredArtists = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -179,104 +79,7 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
     );
   }
 
-  if (hasLoadError && artists.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fcfcf9] px-6 pb-20 pt-40">
-        <div className="w-full max-w-md rounded-3xl border border-emerald-950/10 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
-            <Palette className="text-emerald-600" size={20} />
-          </div>
-          <h2 className="mb-2 text-2xl text-emerald-950 serif">{t('common.loadErrorTitle')}</h2>
-          <p className="mb-6 text-sm leading-relaxed text-emerald-950/50">{t('common.loadErrorDescription')}</p>
-          <button
-            onClick={retryLoad}
-            className="rounded-full bg-emerald-950 px-6 py-3 text-[11px] font-black uppercase tracking-wider text-[#d4af37] shadow-md transition-colors hover:bg-emerald-800"
-          >
-            {t('common.retry')}
-          </button>
-        </div>
->>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
-      </div>
-    );
-  }
-
   return (
-<<<<<<< HEAD
-    <section className="min-h-screen bg-[#fcfcf9] pt-40 pb-20 px-6">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-20"
-        >
-          <span className="text-[#d4af37] uppercase tracking-[0.4em] text-xs font-bold mb-6 block">{messages.artists.badge}</span>
-          <h1 className="text-6xl md:text-8xl serif text-emerald-950 mb-8 leading-tight">{messages.artists.title}</h1>
-          <div className="h-1 w-24 bg-[#d4af37] mx-auto mb-10" />
-          <p className="text-xl text-emerald-950/60 max-w-2xl mx-auto leading-relaxed">{messages.artists.description}</p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {artists.map((artist, index) => (
-            <motion.div
-              key={artist.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-emerald-950/5 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group"
-            >
-              <div className="aspect-[4/5] overflow-hidden relative bg-gradient-to-br from-emerald-50 to-emerald-100">
-                {artist.avatar_url ? (
-                  <img
-                    src={artist.avatar_url}
-                    alt={artist.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3s]"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-emerald-300 text-[120px] font-serif font-bold">
-                    {artist.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-
-              <div className="p-8 space-y-6">
-                <div>
-                  <h3 className="text-3xl serif text-emerald-950 font-bold mb-3 group-hover:text-emerald-700 transition-colors">{artist.name}</h3>
-                  <p className="text-emerald-950/60 text-sm leading-relaxed line-clamp-3 italic">
-                    {artist.bio || messages.artists.fallbackBio}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-6 border-t border-emerald-950/5">
-                  <div className="flex items-center gap-3">
-                    <Palette className="text-emerald-600" size={20} />
-                    <div>
-                      <span className="text-2xl font-bold text-emerald-950">{artworkCounts[artist.id] || 0}</span>
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-950/40 font-black ml-2">{messages.artists.works}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => onArtistSelect(artist.id)}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-950 text-[#d4af37] rounded-full hover:bg-emerald-900 transition-all shadow-lg group/btn text-xs font-black uppercase tracking-widest"
-                  >
-                    {messages.artists.view}
-                    <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {artists.length === 0 && (
-          <div className="text-center py-32">
-            <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <Palette className="text-emerald-300" size={48} />
-            </div>
-            <h3 className="text-3xl serif text-emerald-950 mb-4">{messages.artists.emptyTitle}</h3>
-            <p className="text-emerald-950/60">{messages.artists.emptyDescription}</p>
-=======
     <section className="min-h-screen bg-[#fcfcf9] px-4 pb-24 pt-32 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <motion.div
@@ -420,7 +223,6 @@ const Artists: React.FC<ArtistsProps> = ({ onArtistSelect }) => {
                 <p className="text-sm text-emerald-950/50">{t('artists.emptyDescription')}</p>
               </>
             )}
->>>>>>> 720eb6fbf7785f70adcec728183b6b69aff5b97f
           </div>
         )}
       </div>
