@@ -5,4 +5,4 @@ Disallow: /connexion
 Disallow: /paiement
 Disallow: /profil
 
-Sitemap: https://www.mariemaudeart.com/sitemap.xml
+Sitemap: https://maudelart.com/sitemap.xml

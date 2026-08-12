@@ -243,7 +243,7 @@ const App: React.FC = () => {
     const ogUrl = document.getElementById('og-url');
     const twitterTitle = document.getElementById('twitter-title');
     const twitterDescription = document.getElementById('twitter-description');
-    const url = `https://www.mariemaudeart.com${VIEW_PATHS[currentView]}`;
+    const url = `https://maudelart.com${VIEW_PATHS[currentView]}`;
 
     document.title = meta.title;
     canonical?.setAttribute('href', url);
