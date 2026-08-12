@@ -183,8 +183,8 @@ const Contact: React.FC = () => {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-950/40 md:flex-row">
           <div>{t('home.copyright')}</div>
           <div className="flex space-x-8">
-            <a href="#" className="transition-colors hover:text-emerald-600">{t('common.legal')}</a>
-            <a href="#" className="transition-colors hover:text-emerald-600">{t('common.privacy')}</a>
+            <a href="/mentions-legales" className="transition-colors hover:text-emerald-600">{t('common.legal')}</a>
+            <a href="/confidentialite" className="transition-colors hover:text-emerald-600">{t('common.privacy')}</a>
           </div>
           <div className="text-sm lowercase tracking-normal text-emerald-950 italic normal-case serif">
             {t('common.beauty')}

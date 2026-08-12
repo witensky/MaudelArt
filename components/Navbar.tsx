@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react';
-import { View } from '../App';
+import { View, VIEW_PATHS } from '../App';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../supabaseClient';
 
@@ -30,6 +30,11 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
     setIsProfileOpen(false);
   };
 
+  const handleNavLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, view: View) => {
+    event.preventDefault();
+    handleNavClick(view);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsProfileOpen(false);
@@ -41,6 +46,8 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
     { name: t('nav.gallery'), id: 'gallery' },
     { name: t('nav.artists'), id: 'artists' },
     { name: t('nav.about'), id: 'bio' },
+    { name: t('common.process'), id: 'inspiration' },
+    { name: 'Blog', id: 'blog' },
     { name: t('nav.contact'), id: 'contact' },
   ];
 
@@ -66,18 +73,20 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
   return (
     <nav className={`fixed left-0 top-0 z-[100] h-14 w-full transition-all duration-300 md:h-[60px] ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
       <div className="grid h-full w-full max-w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:gap-8 lg:px-8">
-        <button
-          onClick={() => handleNavClick('home')}
+        <a
+          href={VIEW_PATHS.home}
+          onClick={(event) => handleNavLinkClick(event, 'home')}
           className="whitespace-nowrap py-2 text-base font-bold text-gray-900 transition-opacity hover:opacity-70 sm:text-lg md:text-xl font-serif"
         >
           MAUDELART
-        </button>
+        </a>
 
         <div className="hidden min-w-0 items-center justify-center gap-8 md:flex lg:gap-12 xl:gap-16">
           {navLinks.map((link) => (
-            <motion.button
+            <motion.a
               key={link.id}
-              onClick={() => handleNavClick(link.id)}
+              href={VIEW_PATHS[link.id]}
+              onClick={(event) => handleNavLinkClick(event, link.id)}
               className={`relative whitespace-nowrap py-2 text-xs font-medium transition-colors lg:text-sm ${currentView === link.id ? 'font-bold text-maudel-dark' : 'text-gray-600 hover:text-maudel-dark'}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -90,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
-            </motion.button>
+            </motion.a>
           ))}
         </div>
 
@@ -109,19 +118,21 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
 
               {isProfileOpen && (
                 <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
-                  <button
-                    onClick={() => handleNavClick('profile')}
+                  <a
+                    href={VIEW_PATHS.profile}
+                    onClick={(event) => handleNavLinkClick(event, 'profile')}
                     className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {t('nav.profile')}
-                  </button>
+                  </a>
                   {isAdmin && (
-                    <button
-                      onClick={() => handleNavClick('admin')}
+                    <a
+                      href={VIEW_PATHS.admin}
+                      onClick={(event) => handleNavLinkClick(event, 'admin')}
                       className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
                     >
                       <LayoutDashboard size={14} /> {t('nav.admin')}
-                    </button>
+                    </a>
                   )}
                   <hr className="my-2" />
                   <button
@@ -134,12 +145,13 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
               )}
             </div>
           ) : (
-            <button
-              onClick={() => handleNavClick('auth')}
+            <a
+              href={VIEW_PATHS.auth}
+              onClick={(event) => handleNavLinkClick(event, 'auth')}
               className="flex-shrink-0 rounded-lg bg-green-700 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-green-800 lg:px-6 lg:text-sm"
             >
               {t('nav.login')}
-            </button>
+            </a>
           )}
         </div>
 
@@ -170,31 +182,34 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
 
           <div className="flex flex-col gap-0">
             {navLinks.map((link) => (
-              <button
+              <a
                 key={link.id}
-                onClick={() => handleNavClick(link.id)}
+                href={VIEW_PATHS[link.id]}
+                onClick={(event) => handleNavLinkClick(event, link.id)}
                 className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 {link.name}
-              </button>
+              </a>
             ))}
 
             {user ? (
               <>
                 <hr className="my-2" />
-                <button
-                  onClick={() => handleNavClick('profile')}
+                <a
+                  href={VIEW_PATHS.profile}
+                  onClick={(event) => handleNavLinkClick(event, 'profile')}
                   className="flex h-[44px] w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
                 >
                   {t('nav.profile')}
-                </button>
+                </a>
                 {isAdmin && (
-                  <button
-                    onClick={() => handleNavClick('admin')}
+                  <a
+                    href={VIEW_PATHS.admin}
+                    onClick={(event) => handleNavLinkClick(event, 'admin')}
                     className="flex h-[44px] w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
                   >
                     <LayoutDashboard size={16} /> {t('nav.admin')}
-                  </button>
+                  </a>
                 )}
                 <button
                   onClick={handleLogout}
@@ -204,12 +219,13 @@ const Navbar: React.FC<NavbarProps> = ({ setView, currentView, isAdmin, user }) 
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => handleNavClick('auth')}
+              <a
+                href={VIEW_PATHS.auth}
+                onClick={(event) => handleNavLinkClick(event, 'auth')}
                 className="mt-3 flex h-[44px] w-full items-center justify-center rounded-lg bg-green-700 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-green-800"
               >
                 {t('nav.login')}
-              </button>
+              </a>
             )}
           </div>
         </motion.div>

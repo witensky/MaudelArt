@@ -41,13 +41,96 @@ export type View =
   | 'checkout'
   | 'admin'
   | 'profile'
-  | 'artists';
+  | 'artists'
+  | 'privacy'
+  | 'legal';
 
-const VALID_VIEWS: View[] = ['home', 'gallery', 'bio', 'inspiration', 'contact', 'blog', 'auth', 'checkout', 'admin', 'profile', 'artists'];
+const VALID_VIEWS: View[] = ['home', 'gallery', 'bio', 'inspiration', 'contact', 'blog', 'auth', 'checkout', 'admin', 'profile', 'artists', 'privacy', 'legal'];
 
-const getViewFromHash = (): View => {
+export const VIEW_PATHS: Record<View, string> = {
+  home: '/',
+  gallery: '/galerie',
+  artists: '/artistes',
+  bio: '/a-propos',
+  inspiration: '/inspiration',
+  blog: '/blog',
+  contact: '/contact',
+  auth: '/connexion',
+  checkout: '/paiement',
+  admin: '/admin',
+  profile: '/profil',
+  privacy: '/confidentialite',
+  legal: '/mentions-legales',
+};
+
+const PATH_TO_VIEW: Record<string, View> = Object.fromEntries(
+  Object.entries(VIEW_PATHS).map(([view, path]) => [path, view as View]),
+) as Record<string, View>;
+
+const PAGE_META: Record<View, { title: string; description: string }> = {
+  home: {
+    title: "MaudelArt | Galerie d'art de Marie Maude Eliacin",
+    description: "Decouvrez l'univers artistique de Marie Maude Eliacin : galerie d'oeuvres originales, biographie, inspirations et journal artistique.",
+  },
+  gallery: {
+    title: "Galerie | MaudelArt",
+    description: "Parcourez une selection d'oeuvres originales de Marie Maude Eliacin avec details, techniques, dimensions et inspiration artistique.",
+  },
+  artists: {
+    title: "Artistes | MaudelArt",
+    description: "Decouvrez les artistes presentes par MaudelArt et leurs oeuvres disponibles dans la galerie.",
+  },
+  bio: {
+    title: "A propos de Marie Maude Eliacin | MaudelArt",
+    description: "L'histoire artistique de Marie Maude Eliacin, son parcours, ses expositions et sa demarche picturale.",
+  },
+  inspiration: {
+    title: "Processus et inspiration | MaudelArt",
+    description: "Explorez les techniques, matieres et inspirations qui nourrissent les oeuvres de Marie Maude Eliacin.",
+  },
+  blog: {
+    title: "Journal artistique | MaudelArt",
+    description: "Articles et reflexions sur la peinture, l'atelier, les collections et le regard artistique de MaudelArt.",
+  },
+  contact: {
+    title: "Contact | MaudelArt",
+    description: "Contactez MaudelArt pour une acquisition, une demande de catalogue, une collaboration ou une question presse.",
+  },
+  auth: {
+    title: "Connexion | MaudelArt",
+    description: "Accedez a votre espace MaudelArt.",
+  },
+  checkout: {
+    title: "Demande d'acquisition | MaudelArt",
+    description: "Confirmez votre interet pour une oeuvre et contactez MaudelArt pour finaliser les details.",
+  },
+  admin: {
+    title: "Administration | MaudelArt",
+    description: "Espace d'administration MaudelArt.",
+  },
+  profile: {
+    title: "Profil | MaudelArt",
+    description: "Gerez votre profil collectionneur MaudelArt.",
+  },
+  privacy: {
+    title: "Politique de confidentialite | MaudelArt",
+    description: "Politique de confidentialite de MaudelArt, incluant les donnees, cookies, publicite et moyens de contact.",
+  },
+  legal: {
+    title: "Mentions legales | MaudelArt",
+    description: "Mentions legales, conditions d'utilisation et informations de transparence pour le site MaudelArt.",
+  },
+};
+
+const getViewFromLocation = (): View => {
   const hash = window.location.hash.replace('#', '') as View;
-  return VALID_VIEWS.includes(hash) ? hash : 'home';
+
+  if (VALID_VIEWS.includes(hash)) {
+    return hash;
+  }
+
+  const normalizedPath = window.location.pathname.replace(/\/$/, '') || '/';
+  return PATH_TO_VIEW[normalizedPath] || 'home';
 };
 
 const LoadingFallback = () => (
@@ -56,9 +139,84 @@ const LoadingFallback = () => (
   </div>
 );
 
+const StaticInfoPage = ({ type }: { type: 'privacy' | 'legal' }) => {
+  const isPrivacy = type === 'privacy';
+  const sections = isPrivacy
+    ? [
+      {
+        title: 'Donnees collectees',
+        body: "MaudelArt collecte uniquement les informations necessaires au fonctionnement du site : messages envoyes via le formulaire de contact, demandes d'acquisition, adresse email fournie volontairement et donnees techniques standards liees a la navigation.",
+      },
+      {
+        title: 'Utilisation des informations',
+        body: "Ces informations servent a repondre aux demandes, presenter les oeuvres, ameliorer l'experience du site et proteger les services contre les abus. Elles ne sont pas vendues a des tiers.",
+      },
+      {
+        title: 'Cookies et publicite',
+        body: "Le site peut utiliser des cookies ou technologies similaires pour mesurer l'audience et afficher des annonces via Google AdSense. Google et ses partenaires peuvent utiliser des cookies publicitaires pour diffuser et mesurer les annonces.",
+      },
+      {
+        title: 'Vos choix',
+        body: "Vous pouvez configurer votre navigateur pour limiter ou bloquer les cookies. Pour toute demande concernant vos donnees personnelles, contactez MaudelArt a contact@mariemaudeart.com.",
+      },
+    ]
+    : [
+      {
+        title: 'Editeur du site',
+        body: "MaudelArt presente l'univers artistique, les oeuvres, les inspirations et les actualites de Marie Maude Eliacin. Contact principal : contact@mariemaudeart.com.",
+      },
+      {
+        title: 'Propriete intellectuelle',
+        body: "Les textes, images, oeuvres, photographies, logos et elements graphiques presentes sur le site sont proteges. Toute reproduction ou utilisation non autorisee est interdite.",
+      },
+      {
+        title: 'Informations sur les oeuvres',
+        body: "Les descriptions, dimensions, disponibilites et informations d'acquisition sont fournies a titre informatif. Une demande d'acquisition ne constitue pas une vente definitive avant confirmation directe par MaudelArt.",
+      },
+      {
+        title: 'Responsabilite',
+        body: "MaudelArt s'efforce de maintenir des informations exactes et accessibles. Si vous constatez une erreur, un lien incorrect ou un probleme d'accessibilite, merci de nous le signaler.",
+      },
+    ];
+
+  return (
+    <section className="min-h-screen bg-[#fcfcf9] px-6 pb-24 pt-36 text-emerald-950">
+      <div className="mx-auto max-w-4xl">
+        <span className="mb-5 block text-[10px] font-black uppercase tracking-[0.35em] text-[#d4af37]">
+          MaudelArt
+        </span>
+        <h1 className="mb-6 text-4xl leading-tight md:text-6xl serif">
+          {isPrivacy ? 'Politique de confidentialite' : 'Mentions legales'}
+        </h1>
+        <p className="mb-12 max-w-2xl text-base leading-relaxed text-emerald-950/60">
+          {isPrivacy
+            ? 'Cette page explique comment MaudelArt traite les informations fournies par les visiteurs et comment les services publicitaires peuvent fonctionner sur le site.'
+            : "Cette page rassemble les informations de transparence, d'utilisation et de propriete relatives au site MaudelArt."}
+        </p>
+
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <article key={section.title} className="border-t border-emerald-950/10 py-8">
+              <h2 className="mb-3 text-2xl serif">{section.title}</h2>
+              <p className="leading-relaxed text-emerald-950/65">{section.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 rounded-sm border border-emerald-950/10 bg-white p-6 text-sm leading-relaxed text-emerald-950/60">
+          Derniere mise a jour : 12 aout 2026. Pour toute question, ecrivez a{' '}
+          <a href="mailto:contact@mariemaudeart.com" className="font-semibold text-emerald-800 underline underline-offset-4">
+            contact@mariemaudeart.com
+          </a>.
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const [currentView, setCurrentView] = useState<View>(() => getViewFromHash());
+  const [currentView, setCurrentView] = useState<View>(() => getViewFromLocation());
   const [selectedArtworkForPurchase, setSelectedArtworkForPurchase] = useState<Artwork | null>(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -68,12 +226,34 @@ const App: React.FC = () => {
   const navigateTo = useCallback((view: View) => {
     setCurrentView(view);
 
-    if (window.location.hash !== `#${view}`) {
-      window.location.hash = view;
+    const path = VIEW_PATHS[view];
+    if (window.location.pathname !== path || window.location.hash) {
+      window.history.pushState(null, '', path);
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    const meta = PAGE_META[currentView];
+    const canonical = document.getElementById('canonical-link') as HTMLLinkElement | null;
+    const description = document.querySelector('meta[name="description"]');
+    const ogTitle = document.getElementById('og-title');
+    const ogDescription = document.getElementById('og-description');
+    const ogUrl = document.getElementById('og-url');
+    const twitterTitle = document.getElementById('twitter-title');
+    const twitterDescription = document.getElementById('twitter-description');
+    const url = `https://www.mariemaudeart.com${VIEW_PATHS[currentView]}`;
+
+    document.title = meta.title;
+    canonical?.setAttribute('href', url);
+    description?.setAttribute('content', meta.description);
+    ogTitle?.setAttribute('content', meta.title);
+    ogDescription?.setAttribute('content', meta.description);
+    ogUrl?.setAttribute('content', url);
+    twitterTitle?.setAttribute('content', meta.title);
+    twitterDescription?.setAttribute('content', meta.description);
+  }, [currentView]);
 
   useEffect(() => {
     const loadSocialLinks = async () => {
@@ -141,19 +321,22 @@ const App: React.FC = () => {
   }, [navigateTo]);
 
   useEffect(() => {
-    const syncViewFromHash = () => {
-      setCurrentView(getViewFromHash());
+    const syncViewFromLocation = () => {
+      const nextView = getViewFromLocation();
+      setCurrentView(nextView);
+
+      if (window.location.hash && VALID_VIEWS.includes(window.location.hash.replace('#', '') as View)) {
+        window.history.replaceState(null, '', VIEW_PATHS[nextView]);
+      }
     };
 
-    if (!window.location.hash) {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#home`);
-    }
-
-    window.addEventListener('hashchange', syncViewFromHash);
-    syncViewFromHash();
+    window.addEventListener('hashchange', syncViewFromLocation);
+    window.addEventListener('popstate', syncViewFromLocation);
+    syncViewFromLocation();
 
     return () => {
-      window.removeEventListener('hashchange', syncViewFromHash);
+      window.removeEventListener('hashchange', syncViewFromLocation);
+      window.removeEventListener('popstate', syncViewFromLocation);
     };
   }, []);
 
@@ -268,6 +451,10 @@ const App: React.FC = () => {
         );
       case 'blog':
         return <motion.div key="blog" variants={pageVariants} initial="initial" animate="enter" exit="exit"><Blog /></motion.div>;
+      case 'privacy':
+        return <motion.div key="privacy" variants={pageVariants} initial="initial" animate="enter" exit="exit"><StaticInfoPage type="privacy" /></motion.div>;
+      case 'legal':
+        return <motion.div key="legal" variants={pageVariants} initial="initial" animate="enter" exit="exit"><StaticInfoPage type="legal" /></motion.div>;
       case 'admin':
         return (
           <motion.div key="admin" variants={pageVariants} initial="initial" animate="enter" exit="exit">
@@ -403,10 +590,18 @@ const App: React.FC = () => {
                 {t('home.copyright')}
               </div>
               <div className="flex gap-8">
-                <a href="#" className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white">
+                <a
+                  href={VIEW_PATHS.legal}
+                  onClick={(event) => { event.preventDefault(); navigateTo('legal'); }}
+                  className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white"
+                >
                   {t('common.legal')}
                 </a>
-                <a href="#" className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white">
+                <a
+                  href={VIEW_PATHS.privacy}
+                  onClick={(event) => { event.preventDefault(); navigateTo('privacy'); }}
+                  className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white"
+                >
                   {t('common.privacy')}
                 </a>
               </div>

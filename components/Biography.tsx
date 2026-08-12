@@ -316,7 +316,7 @@ const Biography: React.FC = () => {
           </p>
           <div className="flex justify-center gap-8">
             <a
-              href="#gallery"
+              href="/galerie"
               className="inline-block bg-[#d4af37] px-12 py-5 text-xs font-bold uppercase tracking-[0.3em] text-emerald-950 shadow-2xl transition-all hover:bg-white"
             >
               {t('biography.exploreWorks')}

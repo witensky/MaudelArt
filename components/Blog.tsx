@@ -16,6 +16,39 @@ interface Post {
   created_at: string;
 }
 
+const FALLBACK_POSTS: Post[] = [
+  {
+    id: 'atelier-lumiere-couleur',
+    title: "L'atelier comme lieu de lumiere",
+    slug: 'atelier-lumiere-couleur',
+    excerpt: "Dans la pratique de Marie Maude Eliacin, la lumiere n'est pas seulement un effet visuel. Elle devient une facon de guider le regard, d'installer le calme et de donner aux couleurs leur respiration.",
+    content: "Dans la pratique de Marie Maude Eliacin, la lumiere n'est pas seulement un effet visuel. Elle devient une facon de guider le regard, d'installer le calme et de donner aux couleurs leur respiration. Chaque composition cherche un equilibre entre observation, souvenir et emotion.",
+    image_url: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=1200',
+    published_at: '2026-08-12',
+    created_at: '2026-08-12',
+  },
+  {
+    id: 'collectionner-oeuvre-originale',
+    title: 'Collectionner une oeuvre originale',
+    slug: 'collectionner-oeuvre-originale',
+    excerpt: "Choisir une oeuvre originale commence par une rencontre : une texture, une couleur, un silence ou un detail qui continue d'exister apres le premier regard.",
+    content: "Choisir une oeuvre originale commence par une rencontre : une texture, une couleur, un silence ou un detail qui continue d'exister apres le premier regard. MaudelArt accompagne cette rencontre avec des informations claires sur les techniques, dimensions et conditions d'acquisition.",
+    image_url: 'https://images.unsplash.com/photo-1578926375605-eaf7559b1458?auto=format&fit=crop&q=80&w=1200',
+    published_at: '2026-08-05',
+    created_at: '2026-08-05',
+  },
+  {
+    id: 'matiere-huile-fusain',
+    title: "Huile, fusain et patience du detail",
+    slug: 'matiere-huile-fusain',
+    excerpt: "L'huile apporte profondeur et vibration, tandis que le fusain garde la trace directe du geste. Ensemble, ces matieres ouvrent un dialogue entre construction et intuition.",
+    content: "L'huile apporte profondeur et vibration, tandis que le fusain garde la trace directe du geste. Ensemble, ces matieres ouvrent un dialogue entre construction et intuition. Le detail n'est pas decoratif : il donne une presence concrete a la nature, aux visages et aux objets.",
+    image_url: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=1200',
+    published_at: '2026-07-28',
+    created_at: '2026-07-28',
+  },
+];
+
 export const Blog: React.FC = () => {
   const { language, t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -72,6 +105,8 @@ export const Blog: React.FC = () => {
     );
   }
 
+  const visiblePosts = posts.length > 0 ? posts : FALLBACK_POSTS;
+
   return (
     <section id="blog" className="min-h-screen bg-[#041a14] pb-32 pt-40 text-white">
       <div className="mx-auto max-w-7xl px-6">
@@ -93,14 +128,8 @@ export const Blog: React.FC = () => {
           <div className="mx-auto h-px w-24 bg-[#d4af37]/50" />
         </div>
 
-        {posts.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 py-20 text-center">
-            <h3 className="mb-4 text-2xl text-white/50 serif">{t('blog.emptyTitle')}</h3>
-            <p className="italic text-white/30">{t('blog.emptyDescription')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post, index) => (
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+          {visiblePosts.map((post, index) => (
               <motion.article
                 key={post.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -144,9 +173,8 @@ export const Blog: React.FC = () => {
                   </div>
                 </div>
               </motion.article>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </section>
   );
